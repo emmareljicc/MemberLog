@@ -136,10 +136,12 @@ fun LoginScreen() {
                     when {
                         fullName.isBlank() || email.isBlank() || username.isBlank() || password.isBlank() ->
                             Toast.makeText(context, "Popunite sva polja", Toast.LENGTH_SHORT).show()
-
+                        !Validator.isValidEmail(email) ->
+                            Toast.makeText(context, "Neispravan e-mail", Toast.LENGTH_SHORT).show()
+                        !Validator.isValidPassword(password) ->
+                            Toast.makeText(context, "Lozinka mora biti duža", Toast.LENGTH_SHORT).show()
                         password != repeatedPassword ->
                             Toast.makeText(context, "Lozinke se ne podudaraju", Toast.LENGTH_SHORT).show()
-
                         else -> {
                             Toast.makeText(context, "Registracija je uspješna", Toast.LENGTH_SHORT).show()
                             isRegisterMode = false
@@ -181,4 +183,3 @@ fun LoginPreview() {
         LoginScreen()
     }
 }
-
