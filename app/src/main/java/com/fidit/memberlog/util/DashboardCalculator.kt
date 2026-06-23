@@ -1,5 +1,6 @@
 package com.fidit.memberlog.util
 
+import com.fidit.memberlog.model.Event
 import com.fidit.memberlog.model.FeePayment
 import com.fidit.memberlog.model.Member
 import java.time.LocalDate
@@ -19,7 +20,8 @@ data class DashboardStats(
     val outstandingTotal: Double,
     val growth: List<Pair<String, Int>>,
     val topDebtors: List<Pair<Member, Double>>,
-    val recentPayments: List<RecentPayment>
+    val recentPayments: List<RecentPayment>,
+    val upcomingEvents: List<Event>
 )
 
 object DashboardCalculator {
@@ -28,6 +30,8 @@ object DashboardCalculator {
         members: List<Member>,
         payments: List<FeePayment>,
         defaultMonthlyFee: Double,
+        events: List<Event> = emptyList(),
+        today: String = LocalDate.now().toString(),
         now: YearMonth = YearMonth.now()
     ): DashboardStats {
         val paymentsByMember = payments.groupBy { it.memberId }
@@ -68,6 +72,8 @@ object DashboardCalculator {
             )
         }
 
+        val upcoming = events.filter { it.date >= today }.sortedBy { it.date }
+
         return DashboardStats(
             totalMembers = members.size,
             paidThisMonth = paidThisMonth,
@@ -75,7 +81,8 @@ object DashboardCalculator {
             outstandingTotal = outstanding,
             growth = growth,
             topDebtors = debtors.sortedByDescending { it.second },
-            recentPayments = recent
+            recentPayments = recent,
+            upcomingEvents = upcoming
         )
     }
 

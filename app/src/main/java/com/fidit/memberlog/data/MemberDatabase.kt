@@ -5,16 +5,19 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.fidit.memberlog.model.Attendance
+import com.fidit.memberlog.model.Event
 import com.fidit.memberlog.model.FeeConfig
 import com.fidit.memberlog.model.FeePayment
 import com.fidit.memberlog.model.Member
 import com.fidit.memberlog.model.Role
+import java.time.LocalDate
 import java.time.YearMonth
 import java.time.temporal.ChronoUnit
 
 @Database(
-    entities = [Member::class, FeePayment::class, FeeConfig::class, Role::class],
-    version = 3,
+    entities = [Member::class, FeePayment::class, FeeConfig::class, Role::class, Event::class, Attendance::class],
+    version = 4,
     exportSchema = false
 )
 abstract class MemberDatabase : RoomDatabase() {
@@ -22,6 +25,7 @@ abstract class MemberDatabase : RoomDatabase() {
     abstract fun memberDao(): MemberDao
     abstract fun feeDao(): FeeDao
     abstract fun roleDao(): RoleDao
+    abstract fun activityDao(): ActivityDao
 
     companion object {
         @Volatile
@@ -79,6 +83,30 @@ abstract class MemberDatabase : RoomDatabase() {
                 }
                 seedPayments(db, 4, YearMonth.of(2024, 2), now) { fromEnd, _ -> if (fromEnd <= 2L) null else 10.0 }
                 seedPayments(db, 5, YearMonth.of(2023, 8), now) { _, i -> if (i % 3 == 0) 10.0 else null }
+
+                val today = LocalDate.now()
+                val events = listOf(
+                    arrayOf("Godišnja skupština", today.minusDays(60).toString(), "Dvorana A", "Godišnji sastanak udruge"),
+                    arrayOf("Radionica vještina", today.minusDays(20).toString(), "Učionica 1", "Praktična radionica"),
+                    arrayOf("Humanitarna akcija", today.minusDays(5).toString(), "Gradski trg", "Prikupljanje pomoći"),
+                    arrayOf("Mjesečni sastanak", today.plusDays(7).toString(), "Dvorana B", "Redovni mjesečni sastanak"),
+                    arrayOf("Godišnji izlet", today.plusDays(25).toString(), "Planinarski dom", "Druženje članova")
+                )
+                events.forEach { e ->
+                    db.execSQL(
+                        "INSERT INTO events (title, date, location, notes) " +
+                            "VALUES ('${e[0]}', '${e[1]}', '${e[2]}', '${e[3]}')"
+                    )
+                }
+
+                val attendance = listOf(
+                    1 to 1, 1 to 2, 1 to 3, 1 to 4,
+                    2 to 1, 2 to 3, 2 to 5,
+                    3 to 2, 3 to 4, 3 to 5
+                )
+                attendance.forEach { (eventId, memberId) ->
+                    db.execSQL("INSERT INTO attendance (eventId, memberId) VALUES ($eventId, $memberId)")
+                }
             }
 
             private fun seedPayments(

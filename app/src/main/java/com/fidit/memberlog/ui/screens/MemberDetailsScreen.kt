@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fidit.memberlog.model.Member
 import com.fidit.memberlog.model.Role
+import com.fidit.memberlog.ui.ActivitiesViewModel
 import com.fidit.memberlog.ui.FeeViewModel
 import com.fidit.memberlog.ui.components.FeeHeatmap
 import com.fidit.memberlog.ui.theme.FeePaid
@@ -49,7 +50,8 @@ fun MemberDetailsScreen(
     onBack: () -> Unit,
     onUpdate: (Member) -> Unit,
     onDelete: () -> Unit,
-    feeViewModel: FeeViewModel = viewModel()
+    feeViewModel: FeeViewModel = viewModel(),
+    activitiesViewModel: ActivitiesViewModel = viewModel()
 ) {
     var showEditDialog by remember { mutableStateOf(false) }
     var recordPeriod by remember { mutableStateOf<String?>(null) }
@@ -59,6 +61,7 @@ fun MemberDetailsScreen(
 
     val config by feeViewModel.config.collectAsState()
     val payments by feeViewModel.paymentsFor(member.id).collectAsState(initial = emptyList())
+    val attendedEvents by activitiesViewModel.attendedEvents(member.id).collectAsState(initial = emptyList())
 
     val monthlyFee = FeeCalculator.monthlyFeeFor(member.monthlyFeeOverride, config.defaultMonthlyFee)
     val statuses = FeeCalculator.computeStatuses(member.joinDate, monthlyFee, payments)
@@ -224,6 +227,37 @@ fun MemberDetailsScreen(
                     Icon(Icons.Default.Add, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Zabilježi uplatu")
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        ) {
+            Column(modifier = Modifier.padding(20.dp)) {
+                Text("Dolasci", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    "Prisustvovao na ${attendedEvents.size} događaja",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                if (attendedEvents.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    attendedEvents.take(5).forEach { ev ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(ev.title, fontSize = 14.sp)
+                            Text(DateUtils.formatIsoDate(ev.date), fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
                 }
             }
         }

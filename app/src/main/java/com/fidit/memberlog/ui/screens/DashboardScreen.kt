@@ -127,6 +127,34 @@ fun DashboardScreen(
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
         ) {
             Column(Modifier.padding(20.dp)) {
+                Text("Nadolazeći događaji", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(8.dp))
+                if (stats.upcomingEvents.isEmpty()) {
+                    Text("Nema nadolazećih događaja.", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                } else {
+                    stats.upcomingEvents.take(3).forEach { ev ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 6.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(ev.title, fontSize = 14.sp)
+                            Text(DateUtils.formatIsoDate(ev.date), fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                }
+            }
+        }
+
+        Spacer(Modifier.height(12.dp))
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        ) {
+            Column(Modifier.padding(20.dp)) {
                 Text("Treba pozornost", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(8.dp))
                 if (stats.topDebtors.isEmpty()) {

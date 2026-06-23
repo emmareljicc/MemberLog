@@ -17,8 +17,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.GenericShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -37,7 +40,7 @@ private val ButtonSize = 64.dp
 private val CornerRadius = 30.dp
 private val NotchRadius = 40.dp
 
-data class BottomDest(val icon: ImageVector, val contentDescription: String)
+data class BottomDest(val icon: ImageVector, val contentDescription: String, val badgeCount: Int = 0)
 
 @Composable
 fun MemberLogBottomBar(
@@ -106,7 +109,7 @@ fun MemberLogBottomBar(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     destinations.take(leftCount).forEachIndexed { i, dest ->
-                        BottomNavItem(dest.icon, dest.contentDescription, selectedIndex == i) { onSelect(i) }
+                        BottomNavItem(dest.icon, dest.contentDescription, selectedIndex == i, dest.badgeCount) { onSelect(i) }
                     }
                 }
                 Spacer(modifier = Modifier.width(ButtonSize + 16.dp))
@@ -117,7 +120,7 @@ fun MemberLogBottomBar(
                 ) {
                     destinations.drop(leftCount).forEachIndexed { i, dest ->
                         val index = leftCount + i
-                        BottomNavItem(dest.icon, dest.contentDescription, selectedIndex == index) { onSelect(index) }
+                        BottomNavItem(dest.icon, dest.contentDescription, selectedIndex == index, dest.badgeCount) { onSelect(index) }
                     }
                 }
             }
@@ -148,6 +151,7 @@ private fun BottomNavItem(
     icon: ImageVector,
     contentDescription: String,
     selected: Boolean,
+    badgeCount: Int,
     onClick: () -> Unit
 ) {
     Column(
@@ -157,12 +161,20 @@ private fun BottomNavItem(
             .padding(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = contentDescription,
-            tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(26.dp)
-        )
+        BadgedBox(
+            badge = {
+                if (badgeCount > 0) {
+                    Badge { Text("$badgeCount") }
+                }
+            }
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = contentDescription,
+                tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(26.dp)
+            )
+        }
         Spacer(modifier = Modifier.height(4.dp))
         Box(
             modifier = Modifier

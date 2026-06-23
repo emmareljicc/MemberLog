@@ -1,5 +1,6 @@
 package com.fidit.memberlog.util
 
+import com.fidit.memberlog.model.Event
 import com.fidit.memberlog.model.FeePayment
 import com.fidit.memberlog.model.Member
 import org.junit.Assert.assertEquals
@@ -34,5 +35,23 @@ class DashboardCalculatorTest {
         assertEquals(listOf("2026-01" to 1, "2026-03" to 2), stats.growth)
         assertEquals(1, stats.recentPayments.size)
         assertEquals("Ana", stats.recentPayments.first().memberName)
+    }
+
+    @Test
+    fun upcomingEvents_areFutureSortedAscending() {
+        val events = listOf(
+            Event(id = 1, title = "Prošli", date = "2026-05-01", location = "", notes = ""),
+            Event(id = 2, title = "Kasnije", date = "2026-07-10", location = "", notes = ""),
+            Event(id = 3, title = "Skoro", date = "2026-06-25", location = "", notes = "")
+        )
+        val stats = DashboardCalculator.compute(
+            members = emptyList(),
+            payments = emptyList(),
+            defaultMonthlyFee = 10.0,
+            events = events,
+            today = "2026-06-23",
+            now = now
+        )
+        assertEquals(listOf("Skoro", "Kasnije"), stats.upcomingEvents.map { it.title })
     }
 }

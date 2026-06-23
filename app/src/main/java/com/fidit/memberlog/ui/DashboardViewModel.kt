@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import java.time.LocalDate
 
 class DashboardViewModel(app: Application) : AndroidViewModel(app) {
 
@@ -19,12 +20,19 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
     val stats: StateFlow<DashboardStats> = combine(
         db.memberDao().getAll(),
         db.feeDao().allPayments(),
-        db.feeDao().getConfig()
-    ) { members, payments, config ->
-        DashboardCalculator.compute(members, payments, (config ?: FeeConfig()).defaultMonthlyFee)
+        db.feeDao().getConfig(),
+        db.activityDao().allEvents()
+    ) { members, payments, config, events ->
+        DashboardCalculator.compute(
+            members = members,
+            payments = payments,
+            defaultMonthlyFee = (config ?: FeeConfig()).defaultMonthlyFee,
+            events = events,
+            today = LocalDate.now().toString()
+        )
     }.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5_000),
-        DashboardStats(0, 0, 0.0, 0.0, emptyList(), emptyList(), emptyList())
+        DashboardStats(0, 0, 0.0, 0.0, emptyList(), emptyList(), emptyList(), emptyList())
     )
 }
