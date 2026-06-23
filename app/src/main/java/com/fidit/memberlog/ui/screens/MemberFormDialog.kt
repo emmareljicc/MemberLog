@@ -6,18 +6,26 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.fidit.memberlog.model.Member
 
+/**
+ * Reusable dialog for creating or editing a member.
+ * Pass [existing] = null to add a new member, or an existing [Member] to edit it.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddMemberDialog(
+fun MemberFormDialog(
+    title: String,
+    existing: Member? = null,
+    confirmLabel: String = "Spremi",
     onDismiss: () -> Unit,
-    onAddMember: (String, String, Boolean, String, String) -> Unit
+    onSubmit: (name: String, role: String, isPaid: Boolean, email: String, phone: String) -> Unit
 ) {
-    var name by remember { mutableStateOf("") }
-    var role by remember { mutableStateOf("Član") }
-    var email by remember { mutableStateOf("") }
-    var phone by remember { mutableStateOf("") }
-    var isPaid by remember { mutableStateOf(false) }
+    var name by remember { mutableStateOf(existing?.name ?: "") }
+    var role by remember { mutableStateOf(existing?.role ?: "Član") }
+    var email by remember { mutableStateOf(existing?.email ?: "") }
+    var phone by remember { mutableStateOf(existing?.phone ?: "") }
+    var isPaid by remember { mutableStateOf(existing?.isPaid ?: false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -25,12 +33,12 @@ fun AddMemberDialog(
             Button(
                 onClick = {
                     if (name.isNotBlank() && email.isNotBlank()) {
-                        onAddMember(name, role, isPaid, email, phone)
+                        onSubmit(name, role, isPaid, email, phone)
                     }
                 },
                 enabled = name.isNotBlank()
             ) {
-                Text("Dodaj")
+                Text(confirmLabel)
             }
         },
         dismissButton = {
@@ -38,7 +46,7 @@ fun AddMemberDialog(
                 Text("Odustani")
             }
         },
-        title = { Text("Dodaj novog člana") },
+        title = { Text(title) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
