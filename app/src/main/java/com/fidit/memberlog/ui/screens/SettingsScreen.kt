@@ -191,7 +191,7 @@ fun SettingsScreen(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text("Trenutni korisnik", fontWeight = FontWeight.SemiBold)
-                    Text(if (isAdmin) "Admin" else "Preglednik", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("Admin", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 Row(
                     modifier = Modifier.fillMaxWidth(),
