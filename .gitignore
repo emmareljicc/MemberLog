@@ -16,3 +16,6 @@ Thumbs.db
 *.apk
 *.ap_
 *.aab
+*.md
+*.pdf
+.vscode/

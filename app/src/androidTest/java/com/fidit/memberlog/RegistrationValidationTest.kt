@@ -1,4 +1,4 @@
-package com.example.memberlog
+package com.fidit.memberlog
 
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText

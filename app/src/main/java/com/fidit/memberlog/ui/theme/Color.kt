@@ -1,4 +1,4 @@
-package com.example.memberlog.ui.theme
+package com.fidit.memberlog.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
