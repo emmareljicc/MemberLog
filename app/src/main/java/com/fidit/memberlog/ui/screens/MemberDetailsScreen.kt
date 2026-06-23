@@ -46,6 +46,7 @@ import com.fidit.memberlog.ui.theme.FeePaid
 import com.fidit.memberlog.ui.theme.FeeUnpaid
 import com.fidit.memberlog.util.DateUtils
 import com.fidit.memberlog.util.FeeCalculator
+import com.fidit.memberlog.util.PasswordHash
 import com.fidit.memberlog.util.roleColor
 
 @Composable
@@ -81,7 +82,7 @@ fun MemberDetailsScreen(
             existing = member,
             confirmLabel = "Spremi",
             onDismiss = { showEditDialog = false },
-            onSubmit = { name, roleId, email, phone, feeOverride, status, address, notes, photoPath ->
+            onSubmit = { name, roleId, email, phone, feeOverride, status, address, notes, photoPath, password ->
                 onUpdate(
                     member.copy(
                         name = name,
@@ -92,7 +93,8 @@ fun MemberDetailsScreen(
                         status = status,
                         address = address,
                         notes = notes,
-                        photoPath = photoPath
+                        photoPath = photoPath,
+                        passwordHash = password?.let { PasswordHash.sha256(it) } ?: member.passwordHash
                     )
                 )
                 showEditDialog = false

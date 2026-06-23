@@ -26,16 +26,19 @@ class MainFlowE2ETest {
     @Test
     fun addMember_recordPayment_reflectedOnDashboard() {
         val ctx = ApplicationProvider.getApplicationContext<Context>()
-        val name = "AAA E2E ${System.currentTimeMillis()}"
+        val stamp = System.currentTimeMillis()
+        val name = "AAA E2E $stamp"
         val intent = Intent(ctx, MainActivity::class.java)
-            .putExtra(MainActivity.EXTRA_ROLE, "ADMIN")
+            .putExtra(MainActivity.EXTRA_IS_ADMIN, true)
+            .putExtra(MainActivity.EXTRA_MEMBER_ID, 1)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
         ActivityScenario.launch<MainActivity>(intent).use {
             compose.onNodeWithContentDescription("Dodaj člana").performClick()
 
             compose.onNodeWithText("Ime i Prezime").performTextInput(name)
-            compose.onNodeWithText("E-mail adresa").performTextInput("e2e@test.com")
+            compose.onNodeWithText("E-mail adresa").performTextInput("e2e$stamp@test.com")
+            compose.onNodeWithText("Lozinka za prijavu").performTextInput("lozinka")
             compose.onNodeWithText("Dodaj").performClick()
 
             compose.waitUntil(timeoutMillis = 5_000) {

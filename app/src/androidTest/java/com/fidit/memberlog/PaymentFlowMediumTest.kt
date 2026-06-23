@@ -4,15 +4,15 @@ import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.fidit.memberlog.data.AppUserRepository
+import com.fidit.memberlog.data.AuthRepository
 import com.fidit.memberlog.data.FeeRepository
 import com.fidit.memberlog.data.MemberDatabase
 import com.fidit.memberlog.data.MemberRepository
 import com.fidit.memberlog.model.FeePayment
 import com.fidit.memberlog.model.Member
 import com.fidit.memberlog.model.Role
-import com.fidit.memberlog.model.UserRole
 import com.fidit.memberlog.util.DashboardCalculator
+import com.fidit.memberlog.util.PasswordHash
 import com.fidit.memberlog.util.FeeCalculator
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -30,7 +30,7 @@ class PaymentFlowMediumTest {
     private lateinit var db: MemberDatabase
     private lateinit var members: MemberRepository
     private lateinit var fees: FeeRepository
-    private lateinit var users: AppUserRepository
+    private lateinit var auth: AuthRepository
 
     @Before
     fun setUp() {
@@ -40,18 +40,31 @@ class PaymentFlowMediumTest {
             .build()
         members = MemberRepository(db.memberDao())
         fees = FeeRepository(db.feeDao())
-        users = AppUserRepository(db.appUserDao())
+        auth = AuthRepository(db.memberDao(), db.roleDao())
     }
 
     @After
     fun tearDown() = db.close()
 
     @Test
-    fun authentication_validatesCredentials() = runBlocking {
-        users.register("blagajnik", "tajna", UserRole.ADMIN)
-        assertEquals(UserRole.ADMIN, users.authenticate("blagajnik", "tajna"))
-        assertNull(users.authenticate("blagajnik", "kriva"))
-        assertNull(users.authenticate("nepostojeci", "tajna"))
+    fun login_byRoleAndPassword_resolvesAdmin() = runBlocking {
+        db.roleDao().insert(Role(name = "Blagajnik", colorHex = "#2E9E6B", grantsAdmin = true))
+        val roleId = db.roleDao().getAll().first().first().id
+        members.insert(
+            Member(
+                name = "Ana Blagajnik",
+                roleId = roleId,
+                joinDate = "2025-01-01",
+                email = "blagajnik@test.com",
+                phone = "099",
+                passwordHash = PasswordHash.sha256("tajna")
+            )
+        )
+
+        val ok = auth.login("blagajnik@test.com", "tajna")
+        assertEquals(true, ok?.isAdmin)
+        assertNull(auth.login("blagajnik@test.com", "kriva"))
+        assertNull(auth.login("nepostojeci@test.com", "tajna"))
     }
 
     @Test

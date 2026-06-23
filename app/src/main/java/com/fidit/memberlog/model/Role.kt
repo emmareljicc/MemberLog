@@ -7,5 +7,6 @@ import androidx.room.PrimaryKey
 data class Role(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val name: String,
-    val colorHex: String
+    val colorHex: String,
+    val grantsAdmin: Boolean = false
 )

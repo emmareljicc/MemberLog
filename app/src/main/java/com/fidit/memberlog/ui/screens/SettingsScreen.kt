@@ -34,7 +34,6 @@ fun SettingsScreen(
     onThemeChanged: (Boolean) -> Unit,
     isAdmin: Boolean,
     onManageRoles: () -> Unit,
-    onManageAccounts: () -> Unit,
     onOpenReports: () -> Unit,
     onNavigateToExchangeRates: () -> Unit, // Dodano kako bi odgovaralo Mainu
     feeViewModel: FeeViewModel = viewModel()
@@ -174,7 +173,6 @@ fun SettingsScreen(
         if (isAdmin) {
             Text("UPRAVLJANJE", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
             SettingsLinkCard("Uloge", "Dodaj, uredi i oboji uloge članova", onManageRoles)
-            SettingsLinkCard("Korisnici", "Računi i razine pristupa", onManageAccounts)
             SettingsLinkCard("Izvještaji", "Izvoz u CSV i PDF", onOpenReports)
             Spacer(modifier = Modifier.height(16.dp))
         }

@@ -14,6 +14,9 @@ interface RoleDao {
     @Query("SELECT * FROM roles ORDER BY name")
     fun getAll(): Flow<List<Role>>
 
+    @Query("SELECT * FROM roles WHERE id = :id LIMIT 1")
+    suspend fun getById(id: Int): Role?
+
     @Insert
     suspend fun insert(role: Role)
 

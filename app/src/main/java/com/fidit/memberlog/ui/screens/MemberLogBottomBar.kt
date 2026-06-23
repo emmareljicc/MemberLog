@@ -47,8 +47,12 @@ fun MemberLogBottomBar(
     destinations: List<BottomDest>,
     selectedIndex: Int,
     onSelect: (Int) -> Unit,
-    onAddClick: () -> Unit
+    onAddClick: (() -> Unit)? = null
 ) {
+    if (onAddClick == null) {
+        PlainBottomBar(destinations, selectedIndex, onSelect)
+        return
+    }
     val density = LocalDensity.current
     val notchPx = with(density) { NotchRadius.toPx() }
     val cornerPx = with(density) { CornerRadius.toPx() }
@@ -142,6 +146,41 @@ fun MemberLogBottomBar(
                 tint = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier.size(32.dp)
             )
+        }
+    }
+}
+
+@Composable
+private fun PlainBottomBar(
+    destinations: List<BottomDest>,
+    selectedIndex: Int,
+    onSelect: (Int) -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .navigationBarsPadding()
+            .padding(horizontal = 20.dp, vertical = 8.dp)
+            .height(BarHeight)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(BarHeight)
+                .shadow(elevation = 12.dp, shape = androidx.compose.foundation.shape.RoundedCornerShape(CornerRadius), clip = false)
+                .background(color = MaterialTheme.colorScheme.surface, shape = androidx.compose.foundation.shape.RoundedCornerShape(CornerRadius))
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(BarHeight),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                destinations.forEachIndexed { i, dest ->
+                    BottomNavItem(dest.icon, dest.contentDescription, selectedIndex == i, dest.badgeCount) { onSelect(i) }
+                }
+            }
         }
     }
 }

@@ -21,10 +21,11 @@ class LoginActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     LoginScreen(
-                        onLoginSuccess = { role ->
+                        onLoginSuccess = { memberId, isAdmin ->
                             startActivity(
                                 Intent(this, MainActivity::class.java)
-                                    .putExtra(MainActivity.EXTRA_ROLE, role.name)
+                                    .putExtra(MainActivity.EXTRA_MEMBER_ID, memberId)
+                                    .putExtra(MainActivity.EXTRA_IS_ADMIN, isAdmin)
                             )
                             finish()
                         }

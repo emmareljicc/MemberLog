@@ -68,10 +68,10 @@ fun RolesScreen(
             title = if (editing == null) "Nova uloga" else "Uredi ulogu",
             existing = editing,
             onDismiss = { showForm = false },
-            onSubmit = { name, color ->
+            onSubmit = { name, color, grantsAdmin ->
                 val current = editing
-                if (current == null) viewModel.addRole(name, color)
-                else viewModel.updateRole(current.copy(name = name, colorHex = color))
+                if (current == null) viewModel.addRole(name, color, grantsAdmin)
+                else viewModel.updateRole(current.copy(name = name, colorHex = color, grantsAdmin = grantsAdmin))
                 showForm = false
             }
         )
@@ -156,7 +156,7 @@ fun RolesScreen(
                         Column(modifier = Modifier.weight(1f)) {
                             Text(role.name, fontSize = 16.sp, fontWeight = FontWeight.Bold)
                             Text(
-                                "${counts[role.id] ?: 0} članova",
+                                "${counts[role.id] ?: 0} članova" + if (role.grantsAdmin) " • administrator" else "",
                                 fontSize = 12.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )

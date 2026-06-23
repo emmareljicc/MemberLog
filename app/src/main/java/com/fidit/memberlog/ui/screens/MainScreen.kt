@@ -34,7 +34,6 @@ fun MainScreen(
     var showAddDialog by remember { mutableStateOf(false) }
 
     var showRoles by remember { mutableStateOf(false) }
-    var showAccounts by remember { mutableStateOf(false) }
     var showReports by remember { mutableStateOf(false) }
     var showExchangeRates by remember { mutableStateOf(false) }
 
@@ -44,7 +43,6 @@ fun MainScreen(
         selectedMemberId = null
         selectedEventId = null
         if (showRoles) showRoles = false
-        if (showAccounts) showAccounts = false
         if (showReports) showReports = false
         if (showExchangeRates) showExchangeRates = false
     }
@@ -96,7 +94,6 @@ fun MainScreen(
         ) {
             when {
                 showRoles -> RolesScreen(isAdmin = isAdmin, onBack = { showRoles = false })
-                showAccounts -> AccountsScreen(onBack = { showAccounts = false })
                 showReports -> ReportsScreen(onBack = { showReports = false })
                 showExchangeRates -> ExchangeRateScreen(onBack = { showExchangeRates = false })
                 selectedTab == 0 -> DashboardScreen(
@@ -146,7 +143,6 @@ fun MainScreen(
                     onThemeChanged = onThemeChanged,
                     isAdmin = isAdmin,
                     onManageRoles = { showRoles = true },
-                    onManageAccounts = { showAccounts = true },
                     onOpenReports = { showReports = true },
                     onNavigateToExchangeRates = { showExchangeRates = true }
                 )
@@ -159,8 +155,8 @@ fun MainScreen(
                 roles = roles,
                 confirmLabel = "Dodaj",
                 onDismiss = { showAddDialog = false },
-                onSubmit = { name, roleId, email, phone, feeOverride, status, address, notes, photoPath ->
-                    viewModel.addMember(name, roleId, email, phone, feeOverride, status, address, notes, photoPath)
+                onSubmit = { name, roleId, email, phone, feeOverride, status, address, notes, photoPath, password ->
+                    viewModel.addMember(name, roleId, email, phone, feeOverride, status, address, notes, photoPath, password)
                     showAddDialog = false
                 }
             )

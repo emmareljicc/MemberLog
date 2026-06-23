@@ -11,6 +11,7 @@ import com.fidit.memberlog.model.Member
 import com.fidit.memberlog.model.Role
 import com.fidit.memberlog.util.DateUtils
 import com.fidit.memberlog.util.FeeCalculator
+import com.fidit.memberlog.util.PasswordHash
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -57,7 +58,8 @@ class MembersViewModel(app: Application) : AndroidViewModel(app) {
         status: String,
         address: String,
         notes: String,
-        photoPath: String?
+        photoPath: String?,
+        password: String?
     ) {
         viewModelScope.launch {
             repository.insert(
@@ -71,7 +73,8 @@ class MembersViewModel(app: Application) : AndroidViewModel(app) {
                     status = status,
                     address = address,
                     notes = notes,
-                    photoPath = photoPath
+                    photoPath = photoPath,
+                    passwordHash = password?.let { PasswordHash.sha256(it) }
                 )
             )
         }

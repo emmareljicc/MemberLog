@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.fidit.memberlog.model.Member
 import com.fidit.memberlog.model.MembershipStatus
@@ -37,12 +38,13 @@ fun MemberFormDialog(
     existing: Member? = null,
     confirmLabel: String = "Spremi",
     onDismiss: () -> Unit,
-    onSubmit: (name: String, roleId: Int, email: String, phone: String, monthlyFeeOverride: Double?, status: String, address: String, notes: String, photoPath: String?) -> Unit
+    onSubmit: (name: String, roleId: Int, email: String, phone: String, monthlyFeeOverride: Double?, status: String, address: String, notes: String, photoPath: String?, password: String?) -> Unit
 ) {
     val context = LocalContext.current
     var name by remember { mutableStateOf(existing?.name ?: "") }
     var email by remember { mutableStateOf(existing?.email ?: "") }
     var phone by remember { mutableStateOf(existing?.phone ?: "") }
+    var password by remember { mutableStateOf("") }
     var address by remember { mutableStateOf(existing?.address ?: "") }
     var notes by remember { mutableStateOf(existing?.notes ?: "") }
     var photoPath by remember { mutableStateOf(existing?.photoPath) }
@@ -66,11 +68,11 @@ fun MemberFormDialog(
             Button(
                 onClick = {
                     val rid = roleId
-                    if (name.isNotBlank() && email.isNotBlank() && rid != null) {
-                        onSubmit(name, rid, email, phone, feeOverride.replace(',', '.').toDoubleOrNull(), status.name, address, notes, photoPath)
+                    if (name.isNotBlank() && email.isNotBlank() && rid != null && (existing != null || password.isNotBlank())) {
+                        onSubmit(name, rid, email, phone, feeOverride.replace(',', '.').toDoubleOrNull(), status.name, address, notes, photoPath, password.ifBlank { null })
                     }
                 },
-                enabled = name.isNotBlank() && roleId != null
+                enabled = name.isNotBlank() && email.isNotBlank() && roleId != null && (existing != null || password.isNotBlank())
             ) { Text(confirmLabel) }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Odustani") } },
@@ -194,6 +196,13 @@ fun MemberFormDialog(
                     label = { Text("Mjesečna članarina (EUR, opcionalno)") },
                     placeholder = { Text("Zadano klupski iznos") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true
+                )
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = { Text(if (existing == null) "Lozinka za prijavu" else "Nova lozinka (opcionalno)") },
+                    visualTransformation = PasswordVisualTransformation(),
                     singleLine = true
                 )
             }

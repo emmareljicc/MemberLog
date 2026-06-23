@@ -5,9 +5,9 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
-import com.fidit.memberlog.model.AppUser
 import com.fidit.memberlog.model.Attendance
 import com.fidit.memberlog.model.Event
+import com.fidit.memberlog.model.EventRsvp
 import com.fidit.memberlog.model.FeeConfig
 import com.fidit.memberlog.model.FeePayment
 import com.fidit.memberlog.model.Member
@@ -18,8 +18,8 @@ import java.time.YearMonth
 import java.time.temporal.ChronoUnit
 
 @Database(
-    entities = [Member::class, FeePayment::class, FeeConfig::class, Role::class, Event::class, Attendance::class, AppUser::class],
-    version = 6,
+    entities = [Member::class, FeePayment::class, FeeConfig::class, Role::class, Event::class, Attendance::class, EventRsvp::class],
+    version = 7,
     exportSchema = false
 )
 abstract class MemberDatabase : RoomDatabase() {
@@ -28,7 +28,6 @@ abstract class MemberDatabase : RoomDatabase() {
     abstract fun feeDao(): FeeDao
     abstract fun roleDao(): RoleDao
     abstract fun activityDao(): ActivityDao
-    abstract fun appUserDao(): AppUserDao
 
     companion object {
         @Volatile
@@ -53,14 +52,16 @@ abstract class MemberDatabase : RoomDatabase() {
                 super.onCreate(db)
 
                 val roles = listOf(
-                    "Voditelj" to "#6750A4",
-                    "Tajnik" to "#1E88E5",
-                    "Blagajnik" to "#2E9E6B",
-                    "Član" to "#F59E0B"
+                    Triple("Voditelj", "#6750A4", 1),
+                    Triple("Tajnik", "#1E88E5", 1),
+                    Triple("Blagajnik", "#2E9E6B", 1),
+                    Triple("Član", "#F59E0B", 0)
                 )
-                roles.forEach { (name, color) ->
-                    db.execSQL("INSERT INTO roles (name, colorHex) VALUES ('$name', '$color')")
+                roles.forEach { (name, color, grantsAdmin) ->
+                    db.execSQL("INSERT INTO roles (name, colorHex, grantsAdmin) VALUES ('$name', '$color', $grantsAdmin)")
                 }
+
+                val pw = PasswordHash.sha256("lozinka")
 
                 val members = listOf(
                     arrayOf("Ivan Horvat", "1", "2021-03-01", "ivan.horvat@email.com", "091/123-4567", "ACTIVE", "Ilica 25, Zagreb"),
@@ -78,8 +79,8 @@ abstract class MemberDatabase : RoomDatabase() {
                 )
                 members.forEach { m ->
                     db.execSQL(
-                        "INSERT INTO members (name, roleId, joinDate, email, phone, monthlyFeeOverride, photoPath, status, address, notes) " +
-                            "VALUES ('${m[0]}', ${m[1]}, '${m[2]}', '${m[3]}', '${m[4]}', NULL, NULL, '${m[5]}', '${m[6]}', '')"
+                        "INSERT INTO members (name, roleId, joinDate, email, phone, monthlyFeeOverride, photoPath, status, address, notes, passwordHash) " +
+                            "VALUES ('${m[0]}', ${m[1]}, '${m[2]}', '${m[3]}', '${m[4]}', NULL, NULL, '${m[5]}', '${m[6]}', '', '$pw')"
                     )
                 }
 
@@ -128,15 +129,13 @@ abstract class MemberDatabase : RoomDatabase() {
                     db.execSQL("INSERT INTO attendance (eventId, memberId) VALUES ($eventId, $memberId)")
                 }
 
-                val accounts = listOf(
-                    Triple("admin", "admin", "ADMIN"),
-                    Triple("preglednik", "preglednik", "VIEWER")
+                val rsvps = listOf(
+                    5 to 1, 5 to 4, 5 to 8, 5 to 10,
+                    6 to 4, 6 to 9, 6 to 12,
+                    7 to 1, 7 to 3, 7 to 6
                 )
-                accounts.forEach { (username, password, role) ->
-                    db.execSQL(
-                        "INSERT INTO app_users (username, passwordHash, role) " +
-                            "VALUES ('$username', '${PasswordHash.sha256(password)}', '$role')"
-                    )
+                rsvps.forEach { (eventId, memberId) ->
+                    db.execSQL("INSERT INTO event_rsvp (eventId, memberId) VALUES ($eventId, $memberId)")
                 }
             }
 

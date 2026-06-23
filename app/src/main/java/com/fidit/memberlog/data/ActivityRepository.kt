@@ -2,6 +2,7 @@ package com.fidit.memberlog.data
 
 import com.fidit.memberlog.model.Attendance
 import com.fidit.memberlog.model.Event
+import com.fidit.memberlog.model.EventRsvp
 import kotlinx.coroutines.flow.Flow
 
 class ActivityRepository(private val dao: ActivityDao) {
@@ -23,5 +24,14 @@ class ActivityRepository(private val dao: ActivityDao) {
     suspend fun setAttendance(eventId: Int, memberId: Int, present: Boolean) {
         if (present) dao.addAttendance(Attendance(eventId, memberId))
         else dao.removeAttendance(eventId, memberId)
+    }
+
+    fun rsvpEventIds(memberId: Int): Flow<List<Int>> = dao.rsvpEventIds(memberId)
+
+    fun rsvpMemberIds(eventId: Int): Flow<List<Int>> = dao.rsvpMemberIds(eventId)
+
+    suspend fun setRsvp(eventId: Int, memberId: Int, coming: Boolean) {
+        if (coming) dao.addRsvp(EventRsvp(eventId, memberId))
+        else dao.removeRsvp(eventId, memberId)
     }
 }

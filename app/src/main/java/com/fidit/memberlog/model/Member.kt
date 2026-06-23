@@ -15,7 +15,7 @@ import androidx.room.PrimaryKey
             onDelete = ForeignKey.NO_ACTION
         )
     ],
-    indices = [Index("roleId")]
+    indices = [Index("roleId"), Index(value = ["email"], unique = true)]
 )
 data class Member(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
@@ -28,5 +28,6 @@ data class Member(
     val photoPath: String? = null,
     val status: String = "ACTIVE",
     val address: String = "",
-    val notes: String = ""
+    val notes: String = "",
+    val passwordHash: String? = null
 )

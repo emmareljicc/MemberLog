@@ -48,6 +48,7 @@ fun EventDetailScreen(
     val events by viewModel.events.collectAsState()
     val event = events.firstOrNull { it.id == eventId }
     val attendeeIds by viewModel.attendeeIds(eventId).collectAsState(initial = emptyList())
+    val rsvpIds by viewModel.rsvpMemberIds(eventId).collectAsState(initial = emptyList())
     var showEdit by remember { mutableStateOf(false) }
 
     if (event == null) {
@@ -148,6 +149,13 @@ fun EventDetailScreen(
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold
         )
+        if (rsvpIds.isNotEmpty()) {
+            Text(
+                "Najavili dolazak: ${rsvpIds.size}",
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
         Spacer(Modifier.height(8.dp))
 
         LazyColumn(
@@ -178,6 +186,15 @@ fun EventDetailScreen(
                     }
                     Spacer(Modifier.width(12.dp))
                     Text(member.name, fontSize = 15.sp, modifier = Modifier.weight(1f))
+                    if (rsvpIds.contains(member.id)) {
+                        Text(
+                            "najavio",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(end = 8.dp)
+                        )
+                    }
                     Checkbox(
                         checked = present,
                         enabled = isAdmin,

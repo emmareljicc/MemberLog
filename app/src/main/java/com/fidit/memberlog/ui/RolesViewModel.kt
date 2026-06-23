@@ -27,8 +27,8 @@ class RolesViewModel(app: Application) : AndroidViewModel(app) {
         roles.associate { role -> role.id to members.count { it.roleId == role.id } }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
-    fun addRole(name: String, colorHex: String) {
-        viewModelScope.launch { repo.insert(Role(name = name, colorHex = colorHex)) }
+    fun addRole(name: String, colorHex: String, grantsAdmin: Boolean) {
+        viewModelScope.launch { repo.insert(Role(name = name, colorHex = colorHex, grantsAdmin = grantsAdmin)) }
     }
 
     fun updateRole(role: Role) {

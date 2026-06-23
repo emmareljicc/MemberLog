@@ -6,6 +6,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.fidit.memberlog.model.Attendance
 import com.fidit.memberlog.model.Event
+import com.fidit.memberlog.model.EventRsvp
 import com.fidit.memberlog.model.Member
 import com.fidit.memberlog.model.Role
 import kotlinx.coroutines.flow.first
@@ -75,6 +76,17 @@ class ActivityDaoTest {
         val attended = activityDao.attendedEvents(memberId).first()
         assertEquals(1, attended.size)
         assertEquals(eventId, attended.first().id)
+    }
+
+    @Test
+    fun rsvp_addAndRemove() = runBlocking {
+        val memberId = seedMember()
+        val eventId = seedEvent("2025-06-01")
+        activityDao.addRsvp(EventRsvp(eventId, memberId))
+        assertEquals(listOf(memberId), activityDao.rsvpMemberIds(eventId).first())
+        assertEquals(listOf(eventId), activityDao.rsvpEventIds(memberId).first())
+        activityDao.removeRsvp(eventId, memberId)
+        assertTrue(activityDao.rsvpMemberIds(eventId).first().isEmpty())
     }
 
     @Test

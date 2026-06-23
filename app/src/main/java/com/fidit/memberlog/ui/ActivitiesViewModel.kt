@@ -23,6 +23,14 @@ class ActivitiesViewModel(app: Application) : AndroidViewModel(app) {
 
     fun attendedEvents(memberId: Int): Flow<List<Event>> = repo.attendedEvents(memberId)
 
+    fun rsvpEventIds(memberId: Int): Flow<List<Int>> = repo.rsvpEventIds(memberId)
+
+    fun rsvpMemberIds(eventId: Int): Flow<List<Int>> = repo.rsvpMemberIds(eventId)
+
+    fun setRsvp(eventId: Int, memberId: Int, coming: Boolean) {
+        viewModelScope.launch { repo.setRsvp(eventId, memberId, coming) }
+    }
+
     fun addEvent(title: String, date: String, location: String, notes: String) {
         viewModelScope.launch { repo.addEvent(Event(title = title, date = date, location = location, notes = notes)) }
     }

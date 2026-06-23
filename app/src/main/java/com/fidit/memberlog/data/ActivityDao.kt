@@ -8,6 +8,7 @@ import androidx.room.Query
 import androidx.room.Update
 import com.fidit.memberlog.model.Attendance
 import com.fidit.memberlog.model.Event
+import com.fidit.memberlog.model.EventRsvp
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -42,4 +43,16 @@ interface ActivityDao {
 
     @Query("SELECT * FROM events WHERE id IN (SELECT eventId FROM attendance WHERE memberId = :memberId) ORDER BY date DESC")
     fun attendedEvents(memberId: Int): Flow<List<Event>>
+
+    @Query("SELECT eventId FROM event_rsvp WHERE memberId = :memberId")
+    fun rsvpEventIds(memberId: Int): Flow<List<Int>>
+
+    @Query("SELECT memberId FROM event_rsvp WHERE eventId = :eventId")
+    fun rsvpMemberIds(eventId: Int): Flow<List<Int>>
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun addRsvp(rsvp: EventRsvp)
+
+    @Query("DELETE FROM event_rsvp WHERE eventId = :eventId AND memberId = :memberId")
+    suspend fun removeRsvp(eventId: Int, memberId: Int)
 }

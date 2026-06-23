@@ -13,6 +13,12 @@ interface MemberDao {
     @Query("SELECT * FROM members ORDER BY name")
     fun getAll(): Flow<List<Member>>
 
+    @Query("SELECT * FROM members WHERE id = :id LIMIT 1")
+    fun getById(id: Int): Flow<Member?>
+
+    @Query("SELECT * FROM members WHERE LOWER(TRIM(email)) = LOWER(TRIM(:email)) LIMIT 1")
+    suspend fun getByEmail(email: String): Member?
+
     @Insert
     suspend fun insert(member: Member)
 
