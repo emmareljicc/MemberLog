@@ -5,12 +5,21 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.fidit.memberlog.model.FeeConfig
+import com.fidit.memberlog.model.FeePayment
 import com.fidit.memberlog.model.Member
+import java.time.YearMonth
+import java.time.temporal.ChronoUnit
 
-@Database(entities = [Member::class], version = 1, exportSchema = false)
+@Database(
+    entities = [Member::class, FeePayment::class, FeeConfig::class],
+    version = 2,
+    exportSchema = false
+)
 abstract class MemberDatabase : RoomDatabase() {
 
     abstract fun memberDao(): MemberDao
+    abstract fun feeDao(): FeeDao
 
     companion object {
         @Volatile
@@ -23,28 +32,65 @@ abstract class MemberDatabase : RoomDatabase() {
                     MemberDatabase::class.java,
                     "memberlog.db"
                 )
-                    .fallbackToDestructiveMigration(false)
+                    .fallbackToDestructiveMigration(true)
                     .addCallback(SeedCallback)
                     .build()
                     .also { INSTANCE = it }
             }
         }
 
-        /** Populates the database with the initial demo members the first time it is created. */
         private val SeedCallback = object : RoomDatabase.Callback() {
             override fun onCreate(db: SupportSQLiteDatabase) {
                 super.onCreate(db)
-                val seed = listOf(
-                    "('Ivan Horvat', 'Voditelj', '01.03.2021.', 1, 'ivan.horvat@email.com', '091/123-4567')",
-                    "('Marko Marić', 'Tajnik', '15.08.2022.', 1, 'marko.maric@email.com', '092/876-5432')",
-                    "('Ana Anić', 'Blagajnik', '10.10.2022.', 0, 'ana.anic@email.com', '095/555-4443')",
-                    "('Petra Petrović', 'Član', '05.02.2024.', 1, 'petra.petrovic@email.com', '098/987-6543')",
-                    "('Josip Jurić', 'Član', '20.08.2023.', 0, 'josip.juric@email.com', '097/111-2222')"
+
+                val members = listOf(
+                    arrayOf("Ivan Horvat", "Voditelj", "2021-03-01", "ivan.horvat@email.com", "091/123-4567"),
+                    arrayOf("Marko Marić", "Tajnik", "2022-08-15", "marko.maric@email.com", "092/876-5432"),
+                    arrayOf("Ana Anić", "Blagajnik", "2022-10-10", "ana.anic@email.com", "095/555-4443"),
+                    arrayOf("Petra Petrović", "Član", "2024-02-05", "petra.petrovic@email.com", "098/987-6543"),
+                    arrayOf("Josip Jurić", "Član", "2023-08-20", "josip.juric@email.com", "097/111-2222")
                 )
-                seed.forEach { values ->
+                members.forEach { m ->
                     db.execSQL(
-                        "INSERT INTO members (name, role, joinDate, isPaid, email, phone) VALUES $values"
+                        "INSERT INTO members (name, role, joinDate, email, phone, monthlyFeeOverride) " +
+                            "VALUES ('${m[0]}', '${m[1]}', '${m[2]}', '${m[3]}', '${m[4]}', NULL)"
                     )
+                }
+
+                db.execSQL("INSERT INTO fee_config (id, defaultMonthlyFee) VALUES (1, 10.0)")
+
+                val now = YearMonth.now()
+
+                seedPayments(db, 1, YearMonth.of(2021, 3), now) { fromEnd, _ -> if (fromEnd == 0L) null else 10.0 }
+                seedPayments(db, 2, YearMonth.of(2022, 8), now) { fromEnd, _ -> if (fromEnd <= 1L) null else 10.0 }
+                seedPayments(db, 3, YearMonth.of(2022, 10), now) { fromEnd, i ->
+                    when { fromEnd == 0L -> null; i % 3 == 2 -> 5.0; else -> 10.0 }
+                }
+                seedPayments(db, 4, YearMonth.of(2024, 2), now) { fromEnd, _ -> if (fromEnd <= 2L) null else 10.0 }
+                seedPayments(db, 5, YearMonth.of(2023, 8), now) { _, i -> if (i % 3 == 0) 10.0 else null }
+            }
+
+            private fun seedPayments(
+                db: SupportSQLiteDatabase,
+                memberId: Int,
+                join: YearMonth,
+                now: YearMonth,
+                decide: (monthsFromEnd: Long, index: Int) -> Double?
+            ) {
+                var ym = join
+                var i = 0
+                while (!ym.isAfter(now)) {
+                    val fromEnd = ChronoUnit.MONTHS.between(ym, now)
+                    val amount = decide(fromEnd, i)
+                    if (amount != null && amount > 0.0) {
+                        val period = "%04d-%02d".format(ym.year, ym.monthValue)
+                        db.execSQL(
+                            "INSERT INTO fee_payments (memberId, periodMonth, amount, paidDate) " +
+                                "VALUES ($memberId, '$period', $amount, '$period-05')"
+                        )
+                    }
+                    ym = ym.plusMonths(1)
+                    i++
                 }
             }
         }

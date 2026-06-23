@@ -8,8 +8,10 @@ data class Member(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val name: String,
     val role: String,
+
     val joinDate: String,
-    val isPaid: Boolean,
     val email: String,
-    val phone: String
+    val phone: String,
+
+    val monthlyFeeOverride: Double? = null
 )

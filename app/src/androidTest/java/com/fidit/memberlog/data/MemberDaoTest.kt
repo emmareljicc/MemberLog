@@ -21,14 +21,14 @@ class MemberDaoTest {
     private lateinit var dao: MemberDao
 
     private fun member(name: String) = Member(
-        name = name, role = "Član", joinDate = "Danas",
-        isPaid = true, email = "$name@test.com", phone = "091/000-0000"
+        name = name, role = "Član", joinDate = "2024-01-01",
+        email = "$name@test.com", phone = "091/000-0000"
     )
 
     @Before
     fun setUp() {
         val ctx = ApplicationProvider.getApplicationContext<Context>()
-        // In-memory DB (no seed callback) so each test starts empty.
+
         db = Room.inMemoryDatabaseBuilder(ctx, MemberDatabase::class.java)
             .allowMainThreadQueries()
             .build()
@@ -51,10 +51,10 @@ class MemberDaoTest {
     fun update_changesPersistedFields() = runBlocking {
         dao.insert(member("Ivo"))
         val stored = dao.getAll().first().first()
-        dao.update(stored.copy(role = "Voditelj", isPaid = false))
+        dao.update(stored.copy(role = "Voditelj", monthlyFeeOverride = 15.0))
         val updated = dao.getAll().first().first()
         assertEquals("Voditelj", updated.role)
-        assertEquals(false, updated.isPaid)
+        assertEquals(15.0, updated.monthlyFeeOverride!!, 0.001)
     }
 
     @Test

@@ -1,0 +1,72 @@
+package com.fidit.memberlog.util
+
+import com.fidit.memberlog.model.FeePayment
+import java.time.LocalDate
+import java.time.YearMonth
+import kotlin.math.roundToLong
+
+enum class MonthFeeStatus { PAID, PARTIAL, UNPAID, FUTURE }
+
+data class MonthStatus(
+    val period: String,
+    val expected: Double,
+    val paid: Double,
+    val status: MonthFeeStatus
+)
+
+object FeeCalculator {
+
+    private fun cents(v: Double): Long = (v * 100).roundToLong()
+
+    fun monthlyFeeFor(monthlyFeeOverride: Double?, clubDefault: Double): Double =
+        monthlyFeeOverride ?: clubDefault
+
+    fun monthsFrom(joinIso: String, now: YearMonth = YearMonth.now()): List<String> {
+        val start = parseStart(joinIso) ?: return emptyList()
+        if (start.isAfter(now)) return listOf(fmt(start))
+        val list = mutableListOf<String>()
+        var ym = start
+        while (!ym.isAfter(now)) {
+            list.add(fmt(ym))
+            ym = ym.plusMonths(1)
+        }
+        return list
+    }
+
+    fun computeStatuses(
+        joinIso: String,
+        monthlyFee: Double,
+        payments: List<FeePayment>,
+        now: YearMonth = YearMonth.now()
+    ): List<MonthStatus> {
+        val paidByPeriod = payments.groupBy { it.periodMonth }
+            .mapValues { (_, ps) -> ps.sumOf { it.amount } }
+        val nowStr = fmt(now)
+        return monthsFrom(joinIso, now).map { period ->
+            val paid = paidByPeriod[period] ?: 0.0
+            val status = when {
+                period > nowStr -> MonthFeeStatus.FUTURE
+                cents(monthlyFee) > 0 && cents(paid) >= cents(monthlyFee) -> MonthFeeStatus.PAID
+                cents(paid) <= 0 -> MonthFeeStatus.UNPAID
+                else -> MonthFeeStatus.PARTIAL
+            }
+            MonthStatus(period, monthlyFee, paid, status)
+        }
+    }
+
+    fun totalOwed(statuses: List<MonthStatus>): Double =
+        statuses.filter { it.status != MonthFeeStatus.FUTURE }
+            .sumOf { (it.expected - it.paid).coerceAtLeast(0.0) }
+
+    fun owedMonthsCount(statuses: List<MonthStatus>): Int =
+        statuses.count { it.status == MonthFeeStatus.UNPAID || it.status == MonthFeeStatus.PARTIAL }
+
+    private fun parseStart(joinIso: String): YearMonth? =
+        try {
+            YearMonth.from(LocalDate.parse(joinIso))
+        } catch (e: Exception) {
+            try { YearMonth.parse(joinIso) } catch (e2: Exception) { null }
+        }
+
+    private fun fmt(ym: YearMonth): String = "%04d-%02d".format(ym.year, ym.monthValue)
+}

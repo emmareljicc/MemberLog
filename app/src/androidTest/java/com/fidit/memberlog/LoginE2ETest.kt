@@ -32,12 +32,11 @@ class LoginE2ETest {
 
     @Test
     fun fullLoginWorkflow_opensMainActivity() {
-        // Korisnik unosi podatke i pokreće prijavu
+
         composeTestRule.onNodeWithText("Korisničko ime").performTextInput("testKorisnik")
         composeTestRule.onNodeWithText("Lozinka").performTextInput("sigurnaLozinka123")
         composeTestRule.onNodeWithText("PRIJAVI SE").performClick()
 
-        // Uspješan tok prijave otvara glavni ekran (MainActivity)
         intended(hasComponent(MainActivity::class.java.name))
     }
 }

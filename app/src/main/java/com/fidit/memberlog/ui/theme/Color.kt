@@ -20,3 +20,8 @@ val LightOnSurface = Color(0xFF212121)
 
 val GreenSuccess = Color(0xFF2E7D32)
 val RedAlert = Color(0xFFD32F2F)
+
+val FeePaid = GreenSuccess
+val FeePartial = Color(0xFFF59E0B)
+val FeeUnpaid = RedAlert
+val FeeFuture = Color(0xFFE0DCEB)

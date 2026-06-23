@@ -23,6 +23,7 @@ import com.fidit.memberlog.ui.theme.RedAlert
 @Composable
 fun MembersListScreen(
     members: List<Member>,
+    owedByMember: Map<Int, Double>,
     onMemberClick: (Member) -> Unit
 ) {
     Column(
@@ -98,11 +99,13 @@ fun MembersListScreen(
                                     label = { Text(member.role, fontSize = 12.sp) },
                                     modifier = Modifier.height(24.dp)
                                 )
+                                val owed = owedByMember[member.id] ?: 0.0
+                                val owing = owed > 0.0
                                 Badge(
-                                    containerColor = if (member.isPaid) GreenSuccess else RedAlert
+                                    containerColor = if (owing) RedAlert else GreenSuccess
                                 ) {
                                     Text(
-                                        if (member.isPaid) "Plaćeno" else "Neplaćeno",
+                                        if (owing) "Duguje ${money(owed)}" else "Podmireno",
                                         color = Color.White,
                                         modifier = Modifier.padding(horizontal = 4.dp),
                                         fontSize = 10.sp
@@ -116,3 +119,6 @@ fun MembersListScreen(
         }
     }
 }
+
+private fun money(v: Double): String =
+    (if (v % 1.0 == 0.0) v.toInt().toString() else "%.2f".format(v)) + " €"

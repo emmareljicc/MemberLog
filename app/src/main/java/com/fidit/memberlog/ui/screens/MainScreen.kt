@@ -19,6 +19,7 @@ fun MainScreen(
     var showAddDialog by remember { mutableStateOf(false) }
 
     val members by viewModel.members.collectAsState()
+    val owedByMember by viewModel.owedByMember.collectAsState()
     val selectedMember = members.find { it.id == selectedMemberId }
 
     Scaffold(
@@ -50,6 +51,7 @@ fun MainScreen(
                 if (selectedMember == null) {
                     MembersListScreen(
                         members = members,
+                        owedByMember = owedByMember,
                         onMemberClick = { selectedMemberId = it.id }
                     )
                 } else {
@@ -76,8 +78,8 @@ fun MainScreen(
                 title = "Dodaj novog člana",
                 confirmLabel = "Dodaj",
                 onDismiss = { showAddDialog = false },
-                onSubmit = { name, role, isPaid, email, phone ->
-                    viewModel.addMember(name, role, isPaid, email, phone)
+                onSubmit = { name, role, email, phone, feeOverride ->
+                    viewModel.addMember(name, role, email, phone, feeOverride)
                     showAddDialog = false
                 }
             )

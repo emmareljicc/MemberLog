@@ -38,12 +38,6 @@ private val ButtonSize = 64.dp
 private val CornerRadius = 30.dp
 private val NotchRadius = 40.dp
 
-/**
- * Floating bottom navigation: a rounded "pill" with a soft shadow and a concave
- * notch at the top-center, where the prominent circular Add button is docked.
- * Two icon-only destinations flank the button; the active one is tinted and
- * marked with a small dot. Uses only existing theme colors.
- */
 @Composable
 fun MemberLogBottomBar(
     selectedTab: Int,
@@ -55,7 +49,6 @@ fun MemberLogBottomBar(
     val notchPx = with(density) { NotchRadius.toPx() }
     val cornerPx = with(density) { CornerRadius.toPx() }
 
-    // Rounded rectangle with a semicircular concave cutout at the top-center.
     val pillShape = remember(notchPx, cornerPx) {
         GenericShape { size, _ ->
             val w = size.width
@@ -66,7 +59,7 @@ fun MemberLogBottomBar(
 
             moveTo(c, 0f)
             lineTo(cx - r, 0f)
-            // dip down into the bar and back up, forming the notch
+
             arcTo(
                 rect = androidx.compose.ui.geometry.Rect(cx - r, -r, cx + r, r),
                 startAngleDegrees = 180f,
@@ -92,7 +85,7 @@ fun MemberLogBottomBar(
             .padding(horizontal = 20.dp, vertical = 8.dp)
             .height(BarHeight + Overhang)
     ) {
-        // The floating pill
+
         Box(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -128,7 +121,6 @@ fun MemberLogBottomBar(
             }
         }
 
-        // The docked central Add button
         Box(
             modifier = Modifier
                 .align(Alignment.TopCenter)
