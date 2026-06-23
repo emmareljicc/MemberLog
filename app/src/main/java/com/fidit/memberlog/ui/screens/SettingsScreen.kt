@@ -2,6 +2,7 @@ package com.fidit.memberlog.ui.screens
 
 import android.content.Intent
 import android.widget.Toast
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -30,6 +31,7 @@ import com.fidit.memberlog.ui.FeeViewModel
 fun SettingsScreen(
     isDarkMode: Boolean,
     onThemeChanged: (Boolean) -> Unit,
+    onManageRoles: () -> Unit,
     feeViewModel: FeeViewModel = viewModel()
 ) {
     val context = LocalContext.current
@@ -128,6 +130,32 @@ fun SettingsScreen(
                         }
                     ) { Text("Spremi") }
                 }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text("UPRAVLJANJE", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp)
+                .clickable { onManageRoles() },
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column {
+                    Text("Uloge", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    Text("Dodaj, uredi i oboji uloge članova", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                Text("›", fontSize = 22.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
 

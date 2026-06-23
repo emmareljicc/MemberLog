@@ -8,11 +8,13 @@ import com.fidit.memberlog.data.MemberDatabase
 import com.fidit.memberlog.data.MemberRepository
 import com.fidit.memberlog.model.FeeConfig
 import com.fidit.memberlog.model.Member
+import com.fidit.memberlog.model.Role
 import com.fidit.memberlog.util.DateUtils
 import com.fidit.memberlog.util.FeeCalculator
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -24,6 +26,10 @@ class MembersViewModel(app: Application) : AndroidViewModel(app) {
 
     val members: StateFlow<List<Member>> = repository.allMembers
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    val rolesById: StateFlow<Map<Int, Role>> = db.roleDao().getAll()
+        .map { roles -> roles.associateBy { it.id } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
     val owedByMember: StateFlow<Map<Int, Double>> = combine(
         repository.allMembers,
@@ -44,7 +50,7 @@ class MembersViewModel(app: Application) : AndroidViewModel(app) {
 
     fun addMember(
         name: String,
-        role: String,
+        roleId: Int,
         email: String,
         phone: String,
         monthlyFeeOverride: Double?
@@ -53,7 +59,7 @@ class MembersViewModel(app: Application) : AndroidViewModel(app) {
             repository.insert(
                 Member(
                     name = name,
-                    role = role,
+                    roleId = roleId,
                     joinDate = DateUtils.todayIso(),
                     email = email,
                     phone = phone,

@@ -17,13 +17,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.fidit.memberlog.model.Member
+import com.fidit.memberlog.model.Role
 import com.fidit.memberlog.ui.theme.GreenSuccess
 import com.fidit.memberlog.ui.theme.RedAlert
+import com.fidit.memberlog.util.roleColor
 
 @Composable
 fun MembersListScreen(
     members: List<Member>,
     owedByMember: Map<Int, Double>,
+    rolesById: Map<Int, Role>,
     onMemberClick: (Member) -> Unit
 ) {
     Column(
@@ -46,6 +49,8 @@ fun MembersListScreen(
 
         LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             items(members) { member ->
+                val role = rolesById[member.roleId]
+                val avatarColor = role?.let { roleColor(it.colorHex) } ?: MaterialTheme.colorScheme.primary
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -70,12 +75,12 @@ fun MembersListScreen(
                             modifier = Modifier
                                 .size(48.dp)
                                 .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primary),
+                                .background(avatarColor),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
                                 text = inicijali,
-                                color = MaterialTheme.colorScheme.onPrimary,
+                                color = Color.White,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp
                             )
@@ -94,11 +99,7 @@ fun MembersListScreen(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                AssistChip(
-                                    onClick = {},
-                                    label = { Text(member.role, fontSize = 12.sp) },
-                                    modifier = Modifier.height(24.dp)
-                                )
+                                RoleChip(name = role?.name ?: "—", color = avatarColor)
                                 val owed = owedByMember[member.id] ?: 0.0
                                 val owing = owed > 0.0
                                 Badge(
@@ -117,6 +118,26 @@ fun MembersListScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun RoleChip(name: String, color: Color) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .clip(RoundedCornerShape(8.dp))
+            .background(color.copy(alpha = 0.15f))
+            .padding(horizontal = 8.dp, vertical = 4.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(8.dp)
+                .clip(CircleShape)
+                .background(color)
+        )
+        Spacer(modifier = Modifier.width(6.dp))
+        Text(name, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface)
     }
 }
 

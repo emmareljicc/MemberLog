@@ -8,18 +8,20 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import com.fidit.memberlog.model.FeeConfig
 import com.fidit.memberlog.model.FeePayment
 import com.fidit.memberlog.model.Member
+import com.fidit.memberlog.model.Role
 import java.time.YearMonth
 import java.time.temporal.ChronoUnit
 
 @Database(
-    entities = [Member::class, FeePayment::class, FeeConfig::class],
-    version = 2,
+    entities = [Member::class, FeePayment::class, FeeConfig::class, Role::class],
+    version = 3,
     exportSchema = false
 )
 abstract class MemberDatabase : RoomDatabase() {
 
     abstract fun memberDao(): MemberDao
     abstract fun feeDao(): FeeDao
+    abstract fun roleDao(): RoleDao
 
     companion object {
         @Volatile
@@ -43,24 +45,33 @@ abstract class MemberDatabase : RoomDatabase() {
             override fun onCreate(db: SupportSQLiteDatabase) {
                 super.onCreate(db)
 
+                val roles = listOf(
+                    "Voditelj" to "#6750A4",
+                    "Tajnik" to "#1E88E5",
+                    "Blagajnik" to "#2E9E6B",
+                    "Član" to "#F59E0B"
+                )
+                roles.forEach { (name, color) ->
+                    db.execSQL("INSERT INTO roles (name, colorHex) VALUES ('$name', '$color')")
+                }
+
                 val members = listOf(
-                    arrayOf("Ivan Horvat", "Voditelj", "2021-03-01", "ivan.horvat@email.com", "091/123-4567"),
-                    arrayOf("Marko Marić", "Tajnik", "2022-08-15", "marko.maric@email.com", "092/876-5432"),
-                    arrayOf("Ana Anić", "Blagajnik", "2022-10-10", "ana.anic@email.com", "095/555-4443"),
-                    arrayOf("Petra Petrović", "Član", "2024-02-05", "petra.petrovic@email.com", "098/987-6543"),
-                    arrayOf("Josip Jurić", "Član", "2023-08-20", "josip.juric@email.com", "097/111-2222")
+                    arrayOf("Ivan Horvat", "1", "2021-03-01", "ivan.horvat@email.com", "091/123-4567"),
+                    arrayOf("Marko Marić", "2", "2022-08-15", "marko.maric@email.com", "092/876-5432"),
+                    arrayOf("Ana Anić", "3", "2022-10-10", "ana.anic@email.com", "095/555-4443"),
+                    arrayOf("Petra Petrović", "4", "2024-02-05", "petra.petrovic@email.com", "098/987-6543"),
+                    arrayOf("Josip Jurić", "4", "2023-08-20", "josip.juric@email.com", "097/111-2222")
                 )
                 members.forEach { m ->
                     db.execSQL(
-                        "INSERT INTO members (name, role, joinDate, email, phone, monthlyFeeOverride) " +
-                            "VALUES ('${m[0]}', '${m[1]}', '${m[2]}', '${m[3]}', '${m[4]}', NULL)"
+                        "INSERT INTO members (name, roleId, joinDate, email, phone, monthlyFeeOverride) " +
+                            "VALUES ('${m[0]}', ${m[1]}, '${m[2]}', '${m[3]}', '${m[4]}', NULL)"
                     )
                 }
 
                 db.execSQL("INSERT INTO fee_config (id, defaultMonthlyFee) VALUES (1, 10.0)")
 
                 val now = YearMonth.now()
-
                 seedPayments(db, 1, YearMonth.of(2021, 3), now) { fromEnd, _ -> if (fromEnd == 0L) null else 10.0 }
                 seedPayments(db, 2, YearMonth.of(2022, 8), now) { fromEnd, _ -> if (fromEnd <= 1L) null else 10.0 }
                 seedPayments(db, 3, YearMonth.of(2022, 10), now) { fromEnd, i ->

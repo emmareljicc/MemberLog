@@ -19,29 +19,33 @@ import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fidit.memberlog.model.Member
+import com.fidit.memberlog.model.Role
 import com.fidit.memberlog.ui.FeeViewModel
 import com.fidit.memberlog.ui.components.FeeHeatmap
 import com.fidit.memberlog.ui.theme.FeePaid
 import com.fidit.memberlog.ui.theme.FeeUnpaid
 import com.fidit.memberlog.util.DateUtils
 import com.fidit.memberlog.util.FeeCalculator
+import com.fidit.memberlog.util.roleColor
 
 @Composable
 fun MemberDetailsScreen(
     member: Member,
+    roles: List<Role>,
     onBack: () -> Unit,
     onUpdate: (Member) -> Unit,
     onDelete: () -> Unit,
@@ -49,6 +53,9 @@ fun MemberDetailsScreen(
 ) {
     var showEditDialog by remember { mutableStateOf(false) }
     var recordPeriod by remember { mutableStateOf<String?>(null) }
+
+    val role = roles.firstOrNull { it.id == member.roleId }
+    val accent = role?.let { roleColor(it.colorHex) } ?: MaterialTheme.colorScheme.primary
 
     val config by feeViewModel.config.collectAsState()
     val payments by feeViewModel.paymentsFor(member.id).collectAsState(initial = emptyList())
@@ -61,14 +68,15 @@ fun MemberDetailsScreen(
     if (showEditDialog) {
         MemberFormDialog(
             title = "Uredi člana",
+            roles = roles,
             existing = member,
             confirmLabel = "Spremi",
             onDismiss = { showEditDialog = false },
-            onSubmit = { name, role, email, phone, feeOverride ->
+            onSubmit = { name, roleId, email, phone, feeOverride ->
                 onUpdate(
                     member.copy(
                         name = name,
-                        role = role,
+                        roleId = roleId,
                         email = email,
                         phone = phone,
                         monthlyFeeOverride = feeOverride
@@ -129,14 +137,14 @@ fun MemberDetailsScreen(
                     modifier = Modifier
                         .size(80.dp)
                         .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary),
+                        .background(accent),
                     contentAlignment = Alignment.Center
                 ) {
                     val dijelovi = member.name.split(" ")
                     val inicijali = "${dijelovi[0][0]}${dijelovi.getOrNull(1)?.get(0) ?: ""}"
                     Text(
                         text = inicijali,
-                        color = MaterialTheme.colorScheme.onPrimary,
+                        color = Color.White,
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -146,9 +154,9 @@ fun MemberDetailsScreen(
 
                 Text(member.name, fontSize = 24.sp, fontWeight = FontWeight.Bold)
                 Text(
-                    text = member.role.uppercase(),
+                    text = (role?.name ?: "").uppercase(),
                     fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.primary,
+                    color = accent,
                     fontWeight = FontWeight.SemiBold
                 )
 

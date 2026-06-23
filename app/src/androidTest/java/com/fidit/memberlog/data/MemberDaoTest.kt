@@ -5,6 +5,7 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.fidit.memberlog.model.Member
+import com.fidit.memberlog.model.Role
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -19,20 +20,22 @@ class MemberDaoTest {
 
     private lateinit var db: MemberDatabase
     private lateinit var dao: MemberDao
+    private var roleId = 0
 
     private fun member(name: String) = Member(
-        name = name, role = "Član", joinDate = "2024-01-01",
+        name = name, roleId = roleId, joinDate = "2024-01-01",
         email = "$name@test.com", phone = "091/000-0000"
     )
 
     @Before
-    fun setUp() {
+    fun setUp() = runBlocking {
         val ctx = ApplicationProvider.getApplicationContext<Context>()
-
         db = Room.inMemoryDatabaseBuilder(ctx, MemberDatabase::class.java)
             .allowMainThreadQueries()
             .build()
         dao = db.memberDao()
+        db.roleDao().insert(Role(name = "Član", colorHex = "#6750A4"))
+        roleId = db.roleDao().getAll().first().first().id
     }
 
     @After
@@ -51,9 +54,8 @@ class MemberDaoTest {
     fun update_changesPersistedFields() = runBlocking {
         dao.insert(member("Ivo"))
         val stored = dao.getAll().first().first()
-        dao.update(stored.copy(role = "Voditelj", monthlyFeeOverride = 15.0))
+        dao.update(stored.copy(monthlyFeeOverride = 15.0))
         val updated = dao.getAll().first().first()
-        assertEquals("Voditelj", updated.role)
         assertEquals(15.0, updated.monthlyFeeOverride!!, 0.001)
     }
 

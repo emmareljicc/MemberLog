@@ -17,9 +17,12 @@ fun MainScreen(
     var selectedTab by remember { mutableIntStateOf(0) }
     var selectedMemberId by remember { mutableStateOf<Int?>(null) }
     var showAddDialog by remember { mutableStateOf(false) }
+    var showRoles by remember { mutableStateOf(false) }
 
     val members by viewModel.members.collectAsState()
     val owedByMember by viewModel.owedByMember.collectAsState()
+    val rolesById by viewModel.rolesById.collectAsState()
+    val roles = rolesById.values.sortedBy { it.name }
     val selectedMember = members.find { it.id == selectedMemberId }
 
     Scaffold(
@@ -29,14 +32,17 @@ fun MainScreen(
                 onMembersClick = {
                     selectedTab = 0
                     selectedMemberId = null
+                    showRoles = false
                 },
                 onSettingsClick = {
                     selectedTab = 1
                     selectedMemberId = null
+                    showRoles = false
                 },
                 onAddClick = {
                     selectedTab = 0
                     selectedMemberId = null
+                    showRoles = false
                     showAddDialog = true
                 }
             )
@@ -47,16 +53,20 @@ fun MainScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            if (selectedTab == 0) {
+            if (showRoles) {
+                RolesScreen(onBack = { showRoles = false })
+            } else if (selectedTab == 0) {
                 if (selectedMember == null) {
                     MembersListScreen(
                         members = members,
                         owedByMember = owedByMember,
+                        rolesById = rolesById,
                         onMemberClick = { selectedMemberId = it.id }
                     )
                 } else {
                     MemberDetailsScreen(
                         member = selectedMember,
+                        roles = roles,
                         onBack = { selectedMemberId = null },
                         onUpdate = { viewModel.updateMember(it) },
                         onDelete = {
@@ -68,7 +78,8 @@ fun MainScreen(
             } else {
                 SettingsScreen(
                     isDarkMode = isDarkMode,
-                    onThemeChanged = onThemeChanged
+                    onThemeChanged = onThemeChanged,
+                    onManageRoles = { showRoles = true }
                 )
             }
         }
@@ -76,10 +87,11 @@ fun MainScreen(
         if (showAddDialog) {
             MemberFormDialog(
                 title = "Dodaj novog člana",
+                roles = roles,
                 confirmLabel = "Dodaj",
                 onDismiss = { showAddDialog = false },
-                onSubmit = { name, role, email, phone, feeOverride ->
-                    viewModel.addMember(name, role, email, phone, feeOverride)
+                onSubmit = { name, roleId, email, phone, feeOverride ->
+                    viewModel.addMember(name, roleId, email, phone, feeOverride)
                     showAddDialog = false
                 }
             )

@@ -7,6 +7,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.fidit.memberlog.model.FeeConfig
 import com.fidit.memberlog.model.FeePayment
 import com.fidit.memberlog.model.Member
+import com.fidit.memberlog.model.Role
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -37,8 +38,10 @@ class FeeDaoTest {
     fun tearDown() = db.close()
 
     private suspend fun seedMember(): Int {
+        db.roleDao().insert(Role(name = "Član", colorHex = "#6750A4"))
+        val roleId = db.roleDao().getAll().first().first().id
         memberDao.insert(
-            Member(name = "Test", role = "Član", joinDate = "2025-01-01", email = "t@t.com", phone = "1")
+            Member(name = "Test", roleId = roleId, joinDate = "2025-01-01", email = "t@t.com", phone = "1")
         )
         return memberDao.getAll().first().first().id
     }
