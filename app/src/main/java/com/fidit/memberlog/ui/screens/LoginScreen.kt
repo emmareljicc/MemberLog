@@ -1,11 +1,8 @@
 package com.fidit.memberlog.ui.screens
 
-import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -13,22 +10,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.fidit.memberlog.MainActivity
-import com.fidit.memberlog.ui.theme.MemberLogTheme
-import com.fidit.memberlog.util.Validator
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.fidit.memberlog.model.UserRole
+import com.fidit.memberlog.ui.AuthViewModel
 
 @Composable
-fun LoginScreen() {
+fun LoginScreen(
+    onLoginSuccess: (UserRole) -> Unit,
+    authViewModel: AuthViewModel = viewModel()
+) {
     val context = LocalContext.current
-    var isRegisterMode by remember { mutableStateOf(false) }
-    var fullName by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
+    val hasUsers by authViewModel.hasUsers.collectAsState()
+
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var repeatedPassword by remember { mutableStateOf("") }
+    var confirm by remember { mutableStateOf("") }
+
+    val firstRun = !hasUsers
 
     Column(
         modifier = Modifier
@@ -41,13 +41,13 @@ fun LoginScreen() {
         Spacer(modifier = Modifier.height(28.dp))
 
         Text(
-            text = if (isRegisterMode) "Registracija člana" else "MemberLog",
+            text = "MemberLog",
             fontSize = 30.sp,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.primary
         )
         Text(
-            text = if (isRegisterMode) "Kreiraj korisnički pristup" else "Prijavi se za nastavak",
+            text = if (firstRun) "Kreiraj administratora" else "Prijavi se za nastavak",
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
@@ -63,24 +63,6 @@ fun LoginScreen() {
                 modifier = Modifier.padding(20.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                if (isRegisterMode) {
-                    OutlinedTextField(
-                        value = fullName,
-                        onValueChange = { fullName = it },
-                        label = { Text("Ime i prezime") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
-
-                    OutlinedTextField(
-                        value = email,
-                        onValueChange = { email = it },
-                        label = { Text("E-mail") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
-                }
-
                 OutlinedTextField(
                     value = username,
                     onValueChange = { username = it },
@@ -88,7 +70,6 @@ fun LoginScreen() {
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
-
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
@@ -97,11 +78,10 @@ fun LoginScreen() {
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
-
-                if (isRegisterMode) {
+                if (firstRun) {
                     OutlinedTextField(
-                        value = repeatedPassword,
-                        onValueChange = { repeatedPassword = it },
+                        value = confirm,
+                        onValueChange = { confirm = it },
                         label = { Text("Ponovi lozinku") },
                         visualTransformation = PasswordVisualTransformation(),
                         modifier = Modifier.fillMaxWidth(),
@@ -115,23 +95,24 @@ fun LoginScreen() {
 
         Button(
             onClick = {
-                if (isRegisterMode) {
+                if (firstRun) {
                     when {
-                        fullName.isBlank() || email.isBlank() || username.isBlank() || password.isBlank() ->
+                        username.isBlank() || password.isBlank() ->
                             Toast.makeText(context, "Popunite sva polja", Toast.LENGTH_SHORT).show()
-                        !Validator.isValidEmail(email) ->
-                            Toast.makeText(context, "Neispravan e-mail", Toast.LENGTH_SHORT).show()
-                        !Validator.isValidPassword(password) ->
-                            Toast.makeText(context, "Lozinka mora biti duža", Toast.LENGTH_SHORT).show()
-                        password != repeatedPassword ->
+                        password.length < 4 ->
+                            Toast.makeText(context, "Lozinka mora imati barem 4 znaka", Toast.LENGTH_SHORT).show()
+                        password != confirm ->
                             Toast.makeText(context, "Lozinke se ne podudaraju", Toast.LENGTH_SHORT).show()
-                        else -> {
-                            Toast.makeText(context, "Registracija je uspješna", Toast.LENGTH_SHORT).show()
-                            isRegisterMode = false
+                        else -> authViewModel.createFirstAdmin(username, password) { ok ->
+                            if (ok) onLoginSuccess(UserRole.ADMIN)
+                            else Toast.makeText(context, "Korisničko ime već postoji", Toast.LENGTH_SHORT).show()
                         }
                     }
                 } else if (username.isNotBlank() && password.isNotBlank()) {
-                    context.startActivity(Intent(context, MainActivity::class.java))
+                    authViewModel.login(username, password) { role ->
+                        if (role != null) onLoginSuccess(role)
+                        else Toast.makeText(context, "Neispravni podaci za prijavu", Toast.LENGTH_SHORT).show()
+                    }
                 } else {
                     Toast.makeText(context, "Unesite podatke", Toast.LENGTH_SHORT).show()
                 }
@@ -142,27 +123,7 @@ fun LoginScreen() {
             shape = RoundedCornerShape(18.dp),
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
         ) {
-            Text(if (isRegisterMode) "REGISTRIRAJ SE" else "PRIJAVI SE", fontWeight = FontWeight.Bold)
+            Text(if (firstRun) "KREIRAJ I PRIJAVI SE" else "PRIJAVI SE", fontWeight = FontWeight.Bold)
         }
-
-        OutlinedButton(
-            onClick = { isRegisterMode = !isRegisterMode },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 10.dp),
-            shape = RoundedCornerShape(18.dp)
-        ) {
-            Icon(Icons.Default.PersonAdd, contentDescription = null)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(if (isRegisterMode) "Već imaš račun? Prijava" else "Novi korisnik? Registracija")
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun LoginPreview() {
-    MemberLogTheme {
-        LoginScreen()
     }
 }

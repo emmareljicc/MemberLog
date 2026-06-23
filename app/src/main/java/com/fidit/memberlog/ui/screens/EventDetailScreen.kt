@@ -41,6 +41,7 @@ fun EventDetailScreen(
     eventId: Int,
     members: List<Member>,
     rolesById: Map<Int, Role>,
+    isAdmin: Boolean,
     onBack: () -> Unit,
     viewModel: ActivitiesViewModel = viewModel()
 ) {
@@ -113,32 +114,34 @@ fun EventDetailScreen(
 
         Spacer(Modifier.height(12.dp))
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            OutlinedButton(
-                onClick = { showEdit = true },
-                modifier = Modifier.weight(1f).height(50.dp),
-                shape = RoundedCornerShape(16.dp)
+        if (isAdmin) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Icon(Icons.Default.Edit, contentDescription = null)
-                Spacer(Modifier.width(8.dp))
-                Text("Uredi")
+                OutlinedButton(
+                    onClick = { showEdit = true },
+                    modifier = Modifier.weight(1f).height(50.dp),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Icon(Icons.Default.Edit, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text("Uredi")
+                }
+                Button(
+                    onClick = { viewModel.deleteEvent(event); onBack() },
+                    modifier = Modifier.weight(1f).height(50.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Icon(Icons.Default.Delete, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text("Obriši")
+                }
             }
-            Button(
-                onClick = { viewModel.deleteEvent(event); onBack() },
-                modifier = Modifier.weight(1f).height(50.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Icon(Icons.Default.Delete, contentDescription = null)
-                Spacer(Modifier.width(8.dp))
-                Text("Obriši")
-            }
-        }
 
-        Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(16.dp))
+        }
 
         Text(
             "Dolasci (${attendeeIds.size}/${members.size})",
@@ -160,7 +163,7 @@ fun EventDetailScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(12.dp))
-                        .clickable { viewModel.setAttendance(eventId, member.id, !present) }
+                        .then(if (isAdmin) Modifier.clickable { viewModel.setAttendance(eventId, member.id, !present) } else Modifier)
                         .padding(vertical = 6.dp, horizontal = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -177,6 +180,7 @@ fun EventDetailScreen(
                     Text(member.name, fontSize = 15.sp, modifier = Modifier.weight(1f))
                     Checkbox(
                         checked = present,
+                        enabled = isAdmin,
                         onCheckedChange = { viewModel.setAttendance(eventId, member.id, it) }
                     )
                 }

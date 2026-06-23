@@ -31,7 +31,9 @@ import com.fidit.memberlog.ui.FeeViewModel
 fun SettingsScreen(
     isDarkMode: Boolean,
     onThemeChanged: (Boolean) -> Unit,
+    isAdmin: Boolean,
     onManageRoles: () -> Unit,
+    onManageAccounts: () -> Unit,
     feeViewModel: FeeViewModel = viewModel()
 ) {
     val context = LocalContext.current
@@ -108,58 +110,43 @@ fun SettingsScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.height(12.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    OutlinedTextField(
-                        value = feeText,
-                        onValueChange = { feeText = it },
-                        label = { Text("EUR") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true,
-                        modifier = Modifier.weight(1f)
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Button(
-                        onClick = {
-                            val parsed = feeText.replace(',', '.').toDoubleOrNull()
-                            if (parsed != null && parsed >= 0.0) {
-                                feeViewModel.setDefaultFee(parsed)
-                                Toast.makeText(context, "Spremljeno", Toast.LENGTH_SHORT).show()
-                            } else {
-                                Toast.makeText(context, "Neispravan iznos", Toast.LENGTH_SHORT).show()
+                if (isAdmin) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        OutlinedTextField(
+                            value = feeText,
+                            onValueChange = { feeText = it },
+                            label = { Text("EUR") },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            singleLine = true,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Button(
+                            onClick = {
+                                val parsed = feeText.replace(',', '.').toDoubleOrNull()
+                                if (parsed != null && parsed >= 0.0) {
+                                    feeViewModel.setDefaultFee(parsed)
+                                    Toast.makeText(context, "Spremljeno", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    Toast.makeText(context, "Neispravan iznos", Toast.LENGTH_SHORT).show()
+                                }
                             }
-                        }
-                    ) { Text("Spremi") }
+                        ) { Text("Spremi") }
+                    }
+                } else {
+                    Text("$feeText €", fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Text("UPRAVLJANJE", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp)
-                .clickable { onManageRoles() },
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Column {
-                    Text("Uloge", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                    Text("Dodaj, uredi i oboji uloge članova", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-                Text("›", fontSize = 22.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
+        if (isAdmin) {
+            Text("UPRAVLJANJE", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+            SettingsLinkCard("Uloge", "Dodaj, uredi i oboji uloge članova", onManageRoles)
+            SettingsLinkCard("Korisnici", "Računi i razine pristupa", onManageAccounts)
+            Spacer(modifier = Modifier.height(16.dp))
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
 
         Text("INFORMACIJE", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
         Card(
@@ -175,7 +162,7 @@ fun SettingsScreen(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text("Trenutni korisnik", fontWeight = FontWeight.SemiBold)
-                    Text("Admin", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(if (isAdmin) "Admin" else "Preglednik", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -203,6 +190,32 @@ fun SettingsScreen(
             shape = RoundedCornerShape(16.dp)
         ) {
             Text("ODJAVI SE", color = Color.White, fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+@Composable
+private fun SettingsLinkCard(title: String, subtitle: String, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+            .clickable { onClick() },
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column {
+                Text(title, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Text(subtitle, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            Text("›", fontSize = 22.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

@@ -47,6 +47,7 @@ import com.fidit.memberlog.util.roleColor
 fun MemberDetailsScreen(
     member: Member,
     roles: List<Role>,
+    isAdmin: Boolean,
     onBack: () -> Unit,
     onUpdate: (Member) -> Unit,
     onDelete: () -> Unit,
@@ -213,20 +214,22 @@ fun MemberDetailsScreen(
 
                 FeeHeatmap(
                     statuses = statuses,
-                    onCellClick = { recordPeriod = it },
+                    onCellClick = { if (isAdmin) recordPeriod = it },
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                if (isAdmin) {
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                Button(
-                    onClick = { recordPeriod = DateUtils.currentYearMonth() },
-                    modifier = Modifier.fillMaxWidth().height(48.dp),
-                    shape = RoundedCornerShape(14.dp)
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Zabilježi uplatu")
+                    Button(
+                        onClick = { recordPeriod = DateUtils.currentYearMonth() },
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        shape = RoundedCornerShape(14.dp)
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Zabilježi uplatu")
+                    }
                 }
             }
         }
@@ -262,34 +265,36 @@ fun MemberDetailsScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        if (isAdmin) {
+            Spacer(modifier = Modifier.height(24.dp))
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            OutlinedButton(
-                onClick = { showEditDialog = true },
-                modifier = Modifier
-                    .weight(1f)
-                    .height(50.dp),
-                shape = RoundedCornerShape(16.dp)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Icon(Icons.Default.Edit, contentDescription = null)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Uredi")
-            }
-            Button(
-                onClick = onDelete,
-                modifier = Modifier
-                    .weight(1f)
-                    .height(50.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Icon(Icons.Default.Delete, contentDescription = null)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Obriši")
+                OutlinedButton(
+                    onClick = { showEditDialog = true },
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(50.dp),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Icon(Icons.Default.Edit, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Uredi")
+                }
+                Button(
+                    onClick = onDelete,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(50.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Icon(Icons.Default.Delete, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Obriši")
+                }
             }
         }
 

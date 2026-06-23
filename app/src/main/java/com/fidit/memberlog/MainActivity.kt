@@ -11,12 +11,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import com.fidit.memberlog.model.UserRole
 import com.fidit.memberlog.ui.screens.MainScreen
 import com.fidit.memberlog.ui.theme.MemberLogTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val isAdmin = intent.getStringExtra(EXTRA_ROLE) == UserRole.ADMIN.name
         setContent {
             var isDarkMode by remember { mutableStateOf(false) }
 
@@ -27,10 +29,15 @@ class MainActivity : ComponentActivity() {
                 ) {
                     MainScreen(
                         isDarkMode = isDarkMode,
-                        onThemeChanged = { isDarkMode = it }
+                        onThemeChanged = { isDarkMode = it },
+                        isAdmin = isAdmin
                     )
                 }
             }
         }
+    }
+
+    companion object {
+        const val EXTRA_ROLE = "role"
     }
 }

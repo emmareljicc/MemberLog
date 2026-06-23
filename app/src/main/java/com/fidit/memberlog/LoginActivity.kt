@@ -1,5 +1,6 @@
 package com.fidit.memberlog
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -19,7 +20,15 @@ class LoginActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    LoginScreen()
+                    LoginScreen(
+                        onLoginSuccess = { role ->
+                            startActivity(
+                                Intent(this, MainActivity::class.java)
+                                    .putExtra(MainActivity.EXTRA_ROLE, role.name)
+                            )
+                            finish()
+                        }
+                    )
                 }
             }
         }

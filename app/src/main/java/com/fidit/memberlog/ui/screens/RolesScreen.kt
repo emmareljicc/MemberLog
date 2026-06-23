@@ -51,6 +51,7 @@ import com.fidit.memberlog.util.roleColor
 
 @Composable
 fun RolesScreen(
+    isAdmin: Boolean,
     onBack: () -> Unit,
     viewModel: RolesViewModel = viewModel()
 ) {
@@ -115,24 +116,26 @@ fun RolesScreen(
 
         Spacer(Modifier.height(16.dp))
 
-        Button(
-            onClick = { editing = null; showForm = true },
-            modifier = Modifier.fillMaxWidth().height(48.dp),
-            shape = RoundedCornerShape(14.dp)
-        ) {
-            Icon(Icons.Default.Add, contentDescription = null)
-            Spacer(Modifier.width(8.dp))
-            Text("Dodaj ulogu")
-        }
+        if (isAdmin) {
+            Button(
+                onClick = { editing = null; showForm = true },
+                modifier = Modifier.fillMaxWidth().height(48.dp),
+                shape = RoundedCornerShape(14.dp)
+            ) {
+                Icon(Icons.Default.Add, contentDescription = null)
+                Spacer(Modifier.width(8.dp))
+                Text("Dodaj ulogu")
+            }
 
-        Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(16.dp))
+        }
 
         LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             items(roles) { role ->
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { editing = role; showForm = true },
+                        .then(if (isAdmin) Modifier.clickable { editing = role; showForm = true } else Modifier),
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                 ) {
@@ -157,8 +160,10 @@ fun RolesScreen(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-                        IconButton(onClick = { deleting = role }) {
-                            Icon(Icons.Default.Delete, contentDescription = "Obriši", tint = MaterialTheme.colorScheme.error)
+                        if (isAdmin) {
+                            IconButton(onClick = { deleting = role }) {
+                                Icon(Icons.Default.Delete, contentDescription = "Obriši", tint = MaterialTheme.colorScheme.error)
+                            }
                         }
                     }
                 }

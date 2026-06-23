@@ -28,6 +28,7 @@ import com.fidit.memberlog.util.DateUtils
 
 @Composable
 fun ActivitiesScreen(
+    isAdmin: Boolean,
     onEventClick: (Int) -> Unit,
     viewModel: ActivitiesViewModel = viewModel()
 ) {
@@ -56,17 +57,19 @@ fun ActivitiesScreen(
 
         Spacer(Modifier.height(16.dp))
 
-        Button(
-            onClick = { showForm = true },
-            modifier = Modifier.fillMaxWidth().height(48.dp),
-            shape = RoundedCornerShape(14.dp)
-        ) {
-            Icon(Icons.Default.Add, contentDescription = null)
-            Spacer(Modifier.width(8.dp))
-            Text("Dodaj događaj")
-        }
+        if (isAdmin) {
+            Button(
+                onClick = { showForm = true },
+                modifier = Modifier.fillMaxWidth().height(48.dp),
+                shape = RoundedCornerShape(14.dp)
+            ) {
+                Icon(Icons.Default.Add, contentDescription = null)
+                Spacer(Modifier.width(8.dp))
+                Text("Dodaj događaj")
+            }
 
-        Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(16.dp))
+        }
 
         LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             items(events) { event ->

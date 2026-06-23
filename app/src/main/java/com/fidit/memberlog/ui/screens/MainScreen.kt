@@ -1,5 +1,6 @@
 package com.fidit.memberlog.ui.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
@@ -9,6 +10,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fidit.memberlog.ui.ActivitiesViewModel
 import com.fidit.memberlog.ui.MembersViewModel
@@ -20,14 +22,17 @@ import java.time.LocalDate
 fun MainScreen(
     isDarkMode: Boolean,
     onThemeChanged: (Boolean) -> Unit,
+    isAdmin: Boolean,
     viewModel: MembersViewModel = viewModel(),
     activitiesViewModel: ActivitiesViewModel = viewModel()
 ) {
+    val context = LocalContext.current
     var selectedTab by remember { mutableIntStateOf(0) }
     var selectedMemberId by remember { mutableStateOf<Int?>(null) }
     var selectedEventId by remember { mutableStateOf<Int?>(null) }
     var showAddDialog by remember { mutableStateOf(false) }
     var showRoles by remember { mutableStateOf(false) }
+    var showAccounts by remember { mutableStateOf(false) }
 
     val members by viewModel.members.collectAsState()
     val owedByMember by viewModel.owedByMember.collectAsState()
@@ -58,13 +63,19 @@ fun MainScreen(
                     selectedMemberId = null
                     selectedEventId = null
                     showRoles = false
+                    showAccounts = false
                 },
                 onAddClick = {
-                    selectedTab = 1
-                    selectedMemberId = null
-                    selectedEventId = null
-                    showRoles = false
-                    showAddDialog = true
+                    if (isAdmin) {
+                        selectedTab = 1
+                        selectedMemberId = null
+                        selectedEventId = null
+                        showRoles = false
+                        showAccounts = false
+                        showAddDialog = true
+                    } else {
+                        Toast.makeText(context, "Samo administrator može dodavati", Toast.LENGTH_SHORT).show()
+                    }
                 }
             )
         }
@@ -74,17 +85,17 @@ fun MainScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            if (showRoles) {
-                RolesScreen(onBack = { showRoles = false })
-            } else when (selectedTab) {
-                0 -> DashboardScreen(
+            when {
+                showRoles -> RolesScreen(isAdmin = isAdmin, onBack = { showRoles = false })
+                showAccounts -> AccountsScreen(onBack = { showAccounts = false })
+                selectedTab == 0 -> DashboardScreen(
                     rolesById = rolesById,
                     onMemberClick = { id ->
                         selectedMemberId = id
                         selectedTab = 1
                     }
                 )
-                1 -> {
+                selectedTab == 1 -> {
                     if (selectedMember == null) {
                         MembersListScreen(
                             members = members,
@@ -96,6 +107,7 @@ fun MainScreen(
                         MemberDetailsScreen(
                             member = selectedMember,
                             roles = roles,
+                            isAdmin = isAdmin,
                             onBack = { selectedMemberId = null },
                             onUpdate = { viewModel.updateMember(it) },
                             onDelete = {
@@ -105,15 +117,16 @@ fun MainScreen(
                         )
                     }
                 }
-                2 -> {
+                selectedTab == 2 -> {
                     val eventId = selectedEventId
                     if (eventId == null) {
-                        ActivitiesScreen(onEventClick = { selectedEventId = it })
+                        ActivitiesScreen(isAdmin = isAdmin, onEventClick = { selectedEventId = it })
                     } else {
                         EventDetailScreen(
                             eventId = eventId,
                             members = members,
                             rolesById = rolesById,
+                            isAdmin = isAdmin,
                             onBack = { selectedEventId = null }
                         )
                     }
@@ -121,7 +134,9 @@ fun MainScreen(
                 else -> SettingsScreen(
                     isDarkMode = isDarkMode,
                     onThemeChanged = onThemeChanged,
-                    onManageRoles = { showRoles = true }
+                    isAdmin = isAdmin,
+                    onManageRoles = { showRoles = true },
+                    onManageAccounts = { showAccounts = true }
                 )
             }
         }

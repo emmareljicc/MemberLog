@@ -5,19 +5,21 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.fidit.memberlog.model.AppUser
 import com.fidit.memberlog.model.Attendance
 import com.fidit.memberlog.model.Event
 import com.fidit.memberlog.model.FeeConfig
 import com.fidit.memberlog.model.FeePayment
 import com.fidit.memberlog.model.Member
 import com.fidit.memberlog.model.Role
+import com.fidit.memberlog.util.PasswordHash
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.temporal.ChronoUnit
 
 @Database(
-    entities = [Member::class, FeePayment::class, FeeConfig::class, Role::class, Event::class, Attendance::class],
-    version = 4,
+    entities = [Member::class, FeePayment::class, FeeConfig::class, Role::class, Event::class, Attendance::class, AppUser::class],
+    version = 5,
     exportSchema = false
 )
 abstract class MemberDatabase : RoomDatabase() {
@@ -26,6 +28,7 @@ abstract class MemberDatabase : RoomDatabase() {
     abstract fun feeDao(): FeeDao
     abstract fun roleDao(): RoleDao
     abstract fun activityDao(): ActivityDao
+    abstract fun appUserDao(): AppUserDao
 
     companion object {
         @Volatile
@@ -106,6 +109,17 @@ abstract class MemberDatabase : RoomDatabase() {
                 )
                 attendance.forEach { (eventId, memberId) ->
                     db.execSQL("INSERT INTO attendance (eventId, memberId) VALUES ($eventId, $memberId)")
+                }
+
+                val accounts = listOf(
+                    Triple("admin", "admin", "ADMIN"),
+                    Triple("preglednik", "preglednik", "VIEWER")
+                )
+                accounts.forEach { (username, password, role) ->
+                    db.execSQL(
+                        "INSERT INTO app_users (username, passwordHash, role) " +
+                            "VALUES ('$username', '${PasswordHash.sha256(password)}', '$role')"
+                    )
                 }
             }
 
