@@ -1,15 +1,9 @@
 package com.fidit.memberlog.ui.screens
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fidit.memberlog.ui.MembersViewModel
 
@@ -29,38 +23,22 @@ fun MainScreen(
 
     Scaffold(
         bottomBar = {
-            NavigationBar(containerColor = MaterialTheme.colorScheme.primaryContainer) {
-                NavigationBarItem(
-                    selected = selectedTab == 0 && selectedMember == null,
-                    onClick = {
-                        selectedTab = 0
-                        selectedMemberId = null
-                    },
-                    label = { Text("Članovi") },
-                    icon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = null) }
-                )
-                NavigationBarItem(
-                    selected = selectedTab == 1,
-                    onClick = {
-                        selectedTab = 1
-                        selectedMemberId = null
-                    },
-                    label = { Text("Postavke") },
-                    icon = { Icon(Icons.Default.Settings, contentDescription = null) }
-                )
-            }
-        },
-        floatingActionButton = {
-            if (selectedTab == 0 && selectedMember == null) {
-                ExtendedFloatingActionButton(
-                    onClick = { showAddDialog = true },
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
-                    shape = RoundedCornerShape(16.dp),
-                    icon = { Icon(Icons.Default.Add, contentDescription = null) },
-                    text = { Text("Novi Član") }
-                )
-            }
+            MemberLogBottomBar(
+                selectedTab = selectedTab,
+                onMembersClick = {
+                    selectedTab = 0
+                    selectedMemberId = null
+                },
+                onSettingsClick = {
+                    selectedTab = 1
+                    selectedMemberId = null
+                },
+                onAddClick = {
+                    selectedTab = 0
+                    selectedMemberId = null
+                    showAddDialog = true
+                }
+            )
         }
     ) { innerPadding ->
         Column(
