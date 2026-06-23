@@ -31,6 +31,9 @@ interface ActivityDao {
     @Query("SELECT memberId FROM attendance WHERE eventId = :eventId")
     fun attendeeIds(eventId: Int): Flow<List<Int>>
 
+    @Query("SELECT * FROM attendance")
+    fun allAttendance(): Flow<List<Attendance>>
+
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun addAttendance(attendance: Attendance)
 

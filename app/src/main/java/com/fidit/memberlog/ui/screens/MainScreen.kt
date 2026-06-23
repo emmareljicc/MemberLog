@@ -33,6 +33,7 @@ fun MainScreen(
     var showAddDialog by remember { mutableStateOf(false) }
     var showRoles by remember { mutableStateOf(false) }
     var showAccounts by remember { mutableStateOf(false) }
+    var showReports by remember { mutableStateOf(false) }
 
     val members by viewModel.members.collectAsState()
     val owedByMember by viewModel.owedByMember.collectAsState()
@@ -64,6 +65,7 @@ fun MainScreen(
                     selectedEventId = null
                     showRoles = false
                     showAccounts = false
+                    showReports = false
                 },
                 onAddClick = {
                     if (isAdmin) {
@@ -88,6 +90,7 @@ fun MainScreen(
             when {
                 showRoles -> RolesScreen(isAdmin = isAdmin, onBack = { showRoles = false })
                 showAccounts -> AccountsScreen(onBack = { showAccounts = false })
+                showReports -> ReportsScreen(onBack = { showReports = false })
                 selectedTab == 0 -> DashboardScreen(
                     rolesById = rolesById,
                     onMemberClick = { id ->
@@ -136,7 +139,8 @@ fun MainScreen(
                     onThemeChanged = onThemeChanged,
                     isAdmin = isAdmin,
                     onManageRoles = { showRoles = true },
-                    onManageAccounts = { showAccounts = true }
+                    onManageAccounts = { showAccounts = true },
+                    onOpenReports = { showReports = true }
                 )
             }
         }
