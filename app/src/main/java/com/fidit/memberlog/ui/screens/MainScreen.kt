@@ -32,9 +32,22 @@ fun MainScreen(
     var selectedMemberId by remember { mutableStateOf<Int?>(null) }
     var selectedEventId by remember { mutableStateOf<Int?>(null) }
     var showAddDialog by remember { mutableStateOf(false) }
+
     var showRoles by remember { mutableStateOf(false) }
     var showAccounts by remember { mutableStateOf(false) }
     var showReports by remember { mutableStateOf(false) }
+    var showExchangeRates by remember { mutableStateOf(false) }
+
+    // Pomoćna funkcija koja zatvara sve pod-ekrane odjednom
+    // Ovo sprječava "Assigned value is never read" jer se poziva kroz funkciju!
+    fun resetSubScreens() {
+        selectedMemberId = null
+        selectedEventId = null
+        if (showRoles) showRoles = false
+        if (showAccounts) showAccounts = false
+        if (showReports) showReports = false
+        if (showExchangeRates) showExchangeRates = false
+    }
 
     val members by viewModel.members.collectAsState()
     val owedByMember by viewModel.owedByMember.collectAsState()
@@ -60,22 +73,15 @@ fun MainScreen(
             MemberLogBottomBar(
                 destinations = destinations,
                 selectedIndex = selectedTab,
-                onSelect = {
-                    selectedTab = it
-                    selectedMemberId = null
-                    selectedEventId = null
-                    showRoles = false
-                    showAccounts = false
-                    showReports = false
+                onSelect = { tabIndex ->
+                    resetSubScreens()
+                    selectedTab = tabIndex
                 },
                 onAddClick = {
                     if (isAdmin) {
-                        selectedTab = 1
-                        selectedMemberId = null
-                        selectedEventId = null
-                        showRoles = false
-                        showAccounts = false
+                        resetSubScreens()
                         showAddDialog = true
+                        selectedTab = 1
                     } else {
                         Toast.makeText(context, "Samo administrator može dodavati", Toast.LENGTH_SHORT).show()
                     }
@@ -92,6 +98,7 @@ fun MainScreen(
                 showRoles -> RolesScreen(isAdmin = isAdmin, onBack = { showRoles = false })
                 showAccounts -> AccountsScreen(onBack = { showAccounts = false })
                 showReports -> ReportsScreen(onBack = { showReports = false })
+                showExchangeRates -> ExchangeRateScreen(onBack = { showExchangeRates = false })
                 selectedTab == 0 -> DashboardScreen(
                     rolesById = rolesById,
                     onMemberClick = { id ->
@@ -140,7 +147,8 @@ fun MainScreen(
                     isAdmin = isAdmin,
                     onManageRoles = { showRoles = true },
                     onManageAccounts = { showAccounts = true },
-                    onOpenReports = { showReports = true }
+                    onOpenReports = { showReports = true },
+                    onNavigateToExchangeRates = { showExchangeRates = true }
                 )
             }
         }

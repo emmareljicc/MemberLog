@@ -36,6 +36,7 @@ fun SettingsScreen(
     onManageRoles: () -> Unit,
     onManageAccounts: () -> Unit,
     onOpenReports: () -> Unit,
+    onNavigateToExchangeRates: () -> Unit, // Dodano kako bi odgovaralo Mainu
     feeViewModel: FeeViewModel = viewModel()
 ) {
     val context = LocalContext.current
@@ -92,6 +93,32 @@ fun SettingsScreen(
                     checked = isDarkMode,
                     onCheckedChange = { onThemeChanged(it) }
                 )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text("VALUTA I TEČAJ", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp)
+                .clickable { onNavigateToExchangeRates() },
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column {
+                    Text("Tečajna lista", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    Text("Pregled tečajeva valuta za klupska dugovanja", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                Text("›", fontSize = 22.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
 
