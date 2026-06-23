@@ -1,6 +1,7 @@
 package com.example.memberlog
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -10,21 +11,21 @@ class ValidatorTest {
 
     @Test
     fun email_missingAtSign_returnsFalse() {
-        assertTrue(true)
+        assertFalse(Validator.isValidEmail("ivan.primjer.com"))
     }
 
     @Test
     fun email_correctFormat_returnsTrue() {
-        assertTrue(true)
+        assertTrue(Validator.isValidEmail("ivan@primjer.com"))
     }
 
     @Test
     fun password_tooShort_returnsFalse() {
-        assertTrue(true)
+        assertFalse(Validator.isValidPassword("12345"))
     }
 
     @Test
     fun password_enoughCharacters_returnsTrue() {
-        assertTrue(true)
+        assertTrue(Validator.isValidPassword("123456"))
     }
 }
