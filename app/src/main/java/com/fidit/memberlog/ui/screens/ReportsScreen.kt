@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import com.fidit.memberlog.ui.theme.DisplayFont
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
@@ -52,7 +53,7 @@ fun ReportsScreen(
         }
 
         Spacer(Modifier.height(16.dp))
-        Text("Izvještaji", fontSize = 26.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+        Text("Izvještaji", fontFamily = DisplayFont, fontSize = 26.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
         Text("Izvezi podatke i sažetak kluba", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
         Spacer(Modifier.height(20.dp))

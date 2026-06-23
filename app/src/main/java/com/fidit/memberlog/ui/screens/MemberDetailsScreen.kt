@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CheckCircle
@@ -17,6 +18,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -33,10 +35,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fidit.memberlog.model.Member
+import com.fidit.memberlog.model.MembershipStatus
 import com.fidit.memberlog.model.Role
+import com.fidit.memberlog.ui.components.MemberAvatar
 import com.fidit.memberlog.ui.ActivitiesViewModel
 import com.fidit.memberlog.ui.FeeViewModel
 import com.fidit.memberlog.ui.components.FeeHeatmap
+import com.fidit.memberlog.ui.theme.DisplayFont
 import com.fidit.memberlog.ui.theme.FeePaid
 import com.fidit.memberlog.ui.theme.FeeUnpaid
 import com.fidit.memberlog.util.DateUtils
@@ -76,14 +81,18 @@ fun MemberDetailsScreen(
             existing = member,
             confirmLabel = "Spremi",
             onDismiss = { showEditDialog = false },
-            onSubmit = { name, roleId, email, phone, feeOverride ->
+            onSubmit = { name, roleId, email, phone, feeOverride, status, address, notes, photoPath ->
                 onUpdate(
                     member.copy(
                         name = name,
                         roleId = roleId,
                         email = email,
                         phone = phone,
-                        monthlyFeeOverride = feeOverride
+                        monthlyFeeOverride = feeOverride,
+                        status = status,
+                        address = address,
+                        notes = notes,
+                        photoPath = photoPath
                     )
                 )
                 showEditDialog = false
@@ -137,32 +146,39 @@ fun MemberDetailsScreen(
                     .padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(80.dp)
-                        .clip(CircleShape)
-                        .background(accent),
-                    contentAlignment = Alignment.Center
-                ) {
-                    val dijelovi = member.name.split(" ")
-                    val inicijali = "${dijelovi[0][0]}${dijelovi.getOrNull(1)?.get(0) ?: ""}"
-                    Text(
-                        text = inicijali,
-                        color = Color.White,
-                        fontSize = 28.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+                MemberAvatar(
+                    name = member.name,
+                    photoPath = member.photoPath,
+                    color = accent,
+                    size = 80.dp,
+                    fontSize = 28.sp
+                )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Text(member.name, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                Text(member.name, fontFamily = DisplayFont, fontSize = 24.sp, fontWeight = FontWeight.Bold)
                 Text(
                     text = (role?.name ?: "").uppercase(),
                     fontSize = 14.sp,
                     color = accent,
                     fontWeight = FontWeight.SemiBold
                 )
+
+                val ms = MembershipStatus.from(member.status)
+                val statusColor = when (ms) {
+                    MembershipStatus.ACTIVE -> FeePaid
+                    MembershipStatus.INACTIVE -> MaterialTheme.colorScheme.onSurfaceVariant
+                    MembershipStatus.HONORARY -> MaterialTheme.colorScheme.primary
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(statusColor.copy(alpha = 0.15f))
+                        .padding(horizontal = 12.dp, vertical = 4.dp)
+                ) {
+                    Text(ms.label, color = statusColor, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                }
 
                 Spacer(modifier = Modifier.height(24.dp))
                 HorizontalDivider()
@@ -173,6 +189,14 @@ fun MemberDetailsScreen(
                 InfoRow(Icons.Default.Email, "E-mail adresa", member.email)
                 Spacer(modifier = Modifier.height(16.dp))
                 InfoRow(Icons.Default.Phone, "Broj mobitela", member.phone)
+                if (member.address.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    InfoRow(Icons.Default.Place, "Adresa", member.address)
+                }
+                if (member.notes.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    InfoRow(Icons.AutoMirrored.Filled.Notes, "Bilješke", member.notes)
+                }
             }
         }
 

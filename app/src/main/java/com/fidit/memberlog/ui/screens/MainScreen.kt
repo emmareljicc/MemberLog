@@ -1,6 +1,7 @@
 package com.fidit.memberlog.ui.screens
 
 import android.widget.Toast
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
@@ -98,8 +99,8 @@ fun MainScreen(
                         selectedTab = 1
                     }
                 )
-                selectedTab == 1 -> {
-                    if (selectedMember == null) {
+                selectedTab == 1 -> AnimatedContent(targetState = selectedMember, label = "members") { m ->
+                    if (m == null) {
                         MembersListScreen(
                             members = members,
                             owedByMember = owedByMember,
@@ -108,25 +109,24 @@ fun MainScreen(
                         )
                     } else {
                         MemberDetailsScreen(
-                            member = selectedMember,
+                            member = m,
                             roles = roles,
                             isAdmin = isAdmin,
                             onBack = { selectedMemberId = null },
                             onUpdate = { viewModel.updateMember(it) },
                             onDelete = {
-                                viewModel.deleteMember(selectedMember)
+                                viewModel.deleteMember(m)
                                 selectedMemberId = null
                             }
                         )
                     }
                 }
-                selectedTab == 2 -> {
-                    val eventId = selectedEventId
-                    if (eventId == null) {
+                selectedTab == 2 -> AnimatedContent(targetState = selectedEventId, label = "events") { id ->
+                    if (id == null) {
                         ActivitiesScreen(isAdmin = isAdmin, onEventClick = { selectedEventId = it })
                     } else {
                         EventDetailScreen(
-                            eventId = eventId,
+                            eventId = id,
                             members = members,
                             rolesById = rolesById,
                             isAdmin = isAdmin,
@@ -151,8 +151,8 @@ fun MainScreen(
                 roles = roles,
                 confirmLabel = "Dodaj",
                 onDismiss = { showAddDialog = false },
-                onSubmit = { name, roleId, email, phone, feeOverride ->
-                    viewModel.addMember(name, roleId, email, phone, feeOverride)
+                onSubmit = { name, roleId, email, phone, feeOverride, status, address, notes, photoPath ->
+                    viewModel.addMember(name, roleId, email, phone, feeOverride, status, address, notes, photoPath)
                     showAddDialog = false
                 }
             )

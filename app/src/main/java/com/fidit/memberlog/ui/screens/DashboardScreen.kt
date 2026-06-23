@@ -23,6 +23,7 @@ import com.fidit.memberlog.model.Role
 import com.fidit.memberlog.ui.DashboardViewModel
 import com.fidit.memberlog.ui.components.GrowthChart
 import com.fidit.memberlog.ui.components.ProgressRing
+import com.fidit.memberlog.ui.theme.DisplayFont
 import com.fidit.memberlog.ui.theme.FeePaid
 import com.fidit.memberlog.ui.theme.FeeUnpaid
 import com.fidit.memberlog.util.DateUtils
@@ -44,7 +45,7 @@ fun DashboardScreen(
             .verticalScroll(rememberScrollState())
             .padding(16.dp)
     ) {
-        Text("Nadzorna ploča", fontSize = 26.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+        Text("Nadzorna ploča", fontFamily = DisplayFont, fontSize = 26.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
         Text("Pregled stanja kluba", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
         Spacer(Modifier.height(16.dp))
@@ -65,13 +66,14 @@ fun DashboardScreen(
                     ringColor = FeePaid,
                     trackColor = MaterialTheme.colorScheme.outlineVariant
                 ) {
-                    Text("$pct%", fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                    Text("$pct%", fontFamily = DisplayFont, fontSize = 22.sp, fontWeight = FontWeight.Bold)
                 }
                 Spacer(Modifier.width(20.dp))
                 Column {
                     Text("Plaćeno ovaj mjesec", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Text(
                         "${stats.paidThisMonth} / ${stats.totalMembers}",
+                        fontFamily = DisplayFont,
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -229,7 +231,7 @@ private fun StatTile(modifier: Modifier, label: String, value: String, valueColo
         Column(Modifier.padding(16.dp)) {
             Text(label, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(4.dp))
-            Text(value, fontSize = 22.sp, fontWeight = FontWeight.Bold, color = valueColor)
+            Text(value, fontFamily = DisplayFont, fontSize = 22.sp, fontWeight = FontWeight.Bold, color = valueColor)
         }
     }
 }

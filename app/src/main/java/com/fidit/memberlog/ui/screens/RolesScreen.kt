@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fidit.memberlog.model.Role
 import com.fidit.memberlog.ui.RolesViewModel
+import com.fidit.memberlog.ui.theme.DisplayFont
 import com.fidit.memberlog.util.roleColor
 
 @Composable
@@ -107,7 +108,7 @@ fun RolesScreen(
 
         Spacer(Modifier.height(16.dp))
 
-        Text("Uloge", fontSize = 26.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+        Text("Uloge", fontFamily = DisplayFont, fontSize = 26.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
         Text(
             "Upravljaj ulogama i njihovim bojama",
             fontSize = 14.sp,

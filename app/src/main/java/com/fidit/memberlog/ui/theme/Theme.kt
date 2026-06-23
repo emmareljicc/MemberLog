@@ -1,37 +1,52 @@
 package com.fidit.memberlog.ui.theme
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80,
+    primary = DarkPrimary,
+    onPrimary = DarkOnPrimary,
+    primaryContainer = DarkContainer,
+    onPrimaryContainer = DarkOnContainer,
+    secondary = DarkSecondary,
+    onSecondary = DarkOnPrimary,
     background = DarkBackground,
-    surface = DarkSurface,
-    onPrimary = DarkBackground,
     onBackground = DarkOnSurface,
+    surface = DarkSurface,
     onSurface = DarkOnSurface,
-    error = RedAlert
+    surfaceVariant = DarkSurfaceVariant,
+    onSurfaceVariant = DarkOnSurfaceVariant,
+    outline = DarkOutline,
+    outlineVariant = DarkSurfaceVariant,
+    error = StatusUnpaidDark,
+    onError = DarkOnPrimary
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40,
+    primary = IrisPrimary,
+    onPrimary = IrisOnPrimary,
+    primaryContainer = IrisContainer,
+    onPrimaryContainer = IrisOnContainer,
+    secondary = LightSecondary,
+    onSecondary = IrisOnPrimary,
     background = LightBackground,
-    surface = LightSurface,
-    onPrimary = LightSurface,
     onBackground = LightOnSurface,
+    surface = LightSurface,
     onSurface = LightOnSurface,
-    error = RedAlert
+    surfaceVariant = LightSurfaceVariant,
+    onSurfaceVariant = LightOnSurfaceVariant,
+    outline = LightOutline,
+    outlineVariant = LightSurfaceVariant,
+    error = StatusUnpaid,
+    onError = IrisOnPrimary
 )
 
 @Composable
 fun MemberLogTheme(
-    darkTheme: Boolean = androidx.compose.foundation.isSystemInDarkTheme(),
+    darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
     val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme

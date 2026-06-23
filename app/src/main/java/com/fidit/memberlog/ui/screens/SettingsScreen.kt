@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fidit.memberlog.LoginActivity
 import com.fidit.memberlog.ui.FeeViewModel
+import com.fidit.memberlog.ui.theme.DisplayFont
 
 @Composable
 fun SettingsScreen(
@@ -55,6 +56,7 @@ fun SettingsScreen(
     ) {
         Text(
             text = "Postavke",
+            fontFamily = DisplayFont,
             fontSize = 26.sp,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.primary

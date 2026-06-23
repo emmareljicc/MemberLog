@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fidit.memberlog.ui.ActivitiesViewModel
+import com.fidit.memberlog.ui.theme.DisplayFont
 import com.fidit.memberlog.ui.theme.FeePaid
 import com.fidit.memberlog.util.DateUtils
 
@@ -52,7 +53,7 @@ fun ActivitiesScreen(
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        Text("Aktivnosti", fontSize = 26.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+        Text("Aktivnosti", fontFamily = DisplayFont, fontSize = 26.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
         Text("Događaji i evidencija dolazaka", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
         Spacer(Modifier.height(16.dp))

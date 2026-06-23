@@ -24,5 +24,9 @@ data class Member(
     val joinDate: String,
     val email: String,
     val phone: String,
-    val monthlyFeeOverride: Double? = null
+    val monthlyFeeOverride: Double? = null,
+    val photoPath: String? = null,
+    val status: String = "ACTIVE",
+    val address: String = "",
+    val notes: String = ""
 )

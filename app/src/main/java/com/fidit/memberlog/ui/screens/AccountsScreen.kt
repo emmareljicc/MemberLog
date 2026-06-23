@@ -28,6 +28,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.fidit.memberlog.ui.theme.DisplayFont
 import com.fidit.memberlog.model.UserRole
 import com.fidit.memberlog.ui.AuthViewModel
 
@@ -69,7 +70,7 @@ fun AccountsScreen(
         }
 
         Spacer(Modifier.height(16.dp))
-        Text("Korisnici", fontSize = 26.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+        Text("Korisnici", fontFamily = DisplayFont, fontSize = 26.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
         Text("Računi i razine pristupa", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.height(16.dp))
 

@@ -53,7 +53,11 @@ class MembersViewModel(app: Application) : AndroidViewModel(app) {
         roleId: Int,
         email: String,
         phone: String,
-        monthlyFeeOverride: Double?
+        monthlyFeeOverride: Double?,
+        status: String,
+        address: String,
+        notes: String,
+        photoPath: String?
     ) {
         viewModelScope.launch {
             repository.insert(
@@ -63,7 +67,11 @@ class MembersViewModel(app: Application) : AndroidViewModel(app) {
                     joinDate = DateUtils.todayIso(),
                     email = email,
                     phone = phone,
-                    monthlyFeeOverride = monthlyFeeOverride
+                    monthlyFeeOverride = monthlyFeeOverride,
+                    status = status,
+                    address = address,
+                    notes = notes,
+                    photoPath = photoPath
                 )
             )
         }
