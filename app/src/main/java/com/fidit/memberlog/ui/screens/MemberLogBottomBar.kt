@@ -16,9 +16,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.GenericShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -27,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
@@ -38,11 +37,13 @@ private val ButtonSize = 64.dp
 private val CornerRadius = 30.dp
 private val NotchRadius = 40.dp
 
+data class BottomDest(val icon: ImageVector, val contentDescription: String)
+
 @Composable
 fun MemberLogBottomBar(
-    selectedTab: Int,
-    onMembersClick: () -> Unit,
-    onSettingsClick: () -> Unit,
+    destinations: List<BottomDest>,
+    selectedIndex: Int,
+    onSelect: (Int) -> Unit,
     onAddClick: () -> Unit
 ) {
     val density = LocalDensity.current
@@ -56,12 +57,10 @@ fun MemberLogBottomBar(
             val cx = w / 2f
             val r = notchPx
             val c = cornerPx
-
             moveTo(c, 0f)
             lineTo(cx - r, 0f)
-
             arcTo(
-                rect = androidx.compose.ui.geometry.Rect(cx - r, -r, cx + r, r),
+                rect = Rect(cx - r, -r, cx + r, r),
                 startAngleDegrees = 180f,
                 sweepAngleDegrees = -180f,
                 forceMoveTo = false
@@ -78,6 +77,8 @@ fun MemberLogBottomBar(
         }
     }
 
+    val leftCount = (destinations.size + 1) / 2
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -85,7 +86,6 @@ fun MemberLogBottomBar(
             .padding(horizontal = 20.dp, vertical = 8.dp)
             .height(BarHeight + Overhang)
     ) {
-
         Box(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -98,25 +98,27 @@ fun MemberLogBottomBar(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(BarHeight),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                    BottomNavItem(
-                        icon = Icons.AutoMirrored.Filled.List,
-                        contentDescription = "Članovi",
-                        selected = selectedTab == 0,
-                        onClick = onMembersClick
-                    )
+                Row(
+                    modifier = Modifier.weight(1f),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    destinations.take(leftCount).forEachIndexed { i, dest ->
+                        BottomNavItem(dest.icon, dest.contentDescription, selectedIndex == i) { onSelect(i) }
+                    }
                 }
                 Spacer(modifier = Modifier.width(ButtonSize + 16.dp))
-                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                    BottomNavItem(
-                        icon = Icons.Default.Settings,
-                        contentDescription = "Postavke",
-                        selected = selectedTab == 1,
-                        onClick = onSettingsClick
-                    )
+                Row(
+                    modifier = Modifier.weight(1f),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    destinations.drop(leftCount).forEachIndexed { i, dest ->
+                        val index = leftCount + i
+                        BottomNavItem(dest.icon, dest.contentDescription, selectedIndex == index) { onSelect(index) }
+                    }
                 }
             }
         }

@@ -1,6 +1,10 @@
 package com.fidit.memberlog.ui.screens
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.Dashboard
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -25,22 +29,24 @@ fun MainScreen(
     val roles = rolesById.values.sortedBy { it.name }
     val selectedMember = members.find { it.id == selectedMemberId }
 
+    val destinations = listOf(
+        BottomDest(Icons.Filled.Dashboard, "Nadzorna ploča"),
+        BottomDest(Icons.AutoMirrored.Filled.List, "Članovi"),
+        BottomDest(Icons.Filled.Settings, "Postavke")
+    )
+
     Scaffold(
         bottomBar = {
             MemberLogBottomBar(
-                selectedTab = selectedTab,
-                onMembersClick = {
-                    selectedTab = 0
-                    selectedMemberId = null
-                    showRoles = false
-                },
-                onSettingsClick = {
-                    selectedTab = 1
+                destinations = destinations,
+                selectedIndex = selectedTab,
+                onSelect = {
+                    selectedTab = it
                     selectedMemberId = null
                     showRoles = false
                 },
                 onAddClick = {
-                    selectedTab = 0
+                    selectedTab = 1
                     selectedMemberId = null
                     showRoles = false
                     showAddDialog = true
@@ -55,28 +61,36 @@ fun MainScreen(
         ) {
             if (showRoles) {
                 RolesScreen(onBack = { showRoles = false })
-            } else if (selectedTab == 0) {
-                if (selectedMember == null) {
-                    MembersListScreen(
-                        members = members,
-                        owedByMember = owedByMember,
-                        rolesById = rolesById,
-                        onMemberClick = { selectedMemberId = it.id }
-                    )
-                } else {
-                    MemberDetailsScreen(
-                        member = selectedMember,
-                        roles = roles,
-                        onBack = { selectedMemberId = null },
-                        onUpdate = { viewModel.updateMember(it) },
-                        onDelete = {
-                            viewModel.deleteMember(selectedMember)
-                            selectedMemberId = null
-                        }
-                    )
+            } else when (selectedTab) {
+                0 -> DashboardScreen(
+                    rolesById = rolesById,
+                    onMemberClick = { id ->
+                        selectedMemberId = id
+                        selectedTab = 1
+                    }
+                )
+                1 -> {
+                    if (selectedMember == null) {
+                        MembersListScreen(
+                            members = members,
+                            owedByMember = owedByMember,
+                            rolesById = rolesById,
+                            onMemberClick = { selectedMemberId = it.id }
+                        )
+                    } else {
+                        MemberDetailsScreen(
+                            member = selectedMember,
+                            roles = roles,
+                            onBack = { selectedMemberId = null },
+                            onUpdate = { viewModel.updateMember(it) },
+                            onDelete = {
+                                viewModel.deleteMember(selectedMember)
+                                selectedMemberId = null
+                            }
+                        )
+                    }
                 }
-            } else {
-                SettingsScreen(
+                else -> SettingsScreen(
                     isDarkMode = isDarkMode,
                     onThemeChanged = onThemeChanged,
                     onManageRoles = { showRoles = true }
