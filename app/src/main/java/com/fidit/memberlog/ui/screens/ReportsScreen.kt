@@ -2,10 +2,18 @@ package com.fidit.memberlog.ui.screens
 
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -13,8 +21,18 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.PictureAsPdf
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -130,11 +148,11 @@ fun ReportsScreen(
         Spacer(Modifier.height(Dimens.gapSmall))
 
         ExportRow(Icons.Default.Group, "Članovi (CSV)", "${data.memberRows.size} članova") {
-            shareText(context, "clanovi_$suffix.csv", "text/csv", ReportBuilder.membersCsv(data))
+            shareText(context, "clanovi_$suffix.csv", ReportBuilder.membersCsv(data))
         }
         Spacer(Modifier.height(Dimens.gapSmall))
         ExportRow(Icons.Default.Payments, "Uplate (CSV)", "${data.paymentRows.size} uplata u razdoblju") {
-            shareText(context, "uplate_$suffix.csv", "text/csv", ReportBuilder.paymentsCsv(data))
+            shareText(context, "uplate_$suffix.csv", ReportBuilder.paymentsCsv(data))
         }
         Spacer(Modifier.height(Dimens.gapSmall))
         ExportRow(Icons.Default.PictureAsPdf, "Cijeli izvještaj (PDF)", "Sažetak, dugovanja i događanja") {
@@ -186,11 +204,11 @@ private fun ExportRow(icon: ImageVector, title: String, subtitle: String, onClic
 private fun money(v: Double): String =
     (if (v % 1.0 == 0.0) v.toInt().toString() else "%.2f".format(v)) + " €"
 
-private fun shareText(context: Context, fileName: String, mime: String, content: String) {
+private fun shareText(context: Context, fileName: String, content: String) {
     val dir = File(context.getExternalFilesDir(null), "exports").apply { mkdirs() }
     val file = File(dir, fileName)
     file.writeText(content, Charsets.UTF_8)
-    shareFile(context, file, mime)
+    shareFile(context, file, "text/csv")
 }
 
 private fun shareFile(context: Context, file: File, mime: String) {
@@ -205,7 +223,7 @@ private fun shareFile(context: Context, file: File, mime: String) {
     }
     try {
         context.startActivity(chooser)
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         Toast.makeText(context, "Datoteka spremljena: ${file.name}", Toast.LENGTH_SHORT).show()
     }
 }

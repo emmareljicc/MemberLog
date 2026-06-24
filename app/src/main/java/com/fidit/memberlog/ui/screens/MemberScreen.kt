@@ -32,7 +32,6 @@ import com.fidit.memberlog.ui.components.BackButton
 import com.fidit.memberlog.ui.components.LoadingSpinner
 import com.fidit.memberlog.ui.theme.Dimens
 import com.fidit.memberlog.util.DateUtils
-import java.time.LocalDate
 
 @Composable
 fun MemberScreen(
@@ -93,7 +92,6 @@ fun MemberScreen(
                     1 -> MemberEventsScreen(m, activitiesViewModel)
                     2 -> {
                         val amountToPay = m.monthlyFeeOverride ?: feeConfig.defaultMonthlyFee
-                        val currentPeriod = LocalDate.now().toString().dropLast(3).replace('-', '-')
 
                         key(amountToPay, selectedTab) {
                             RecordPaymentScreen(
