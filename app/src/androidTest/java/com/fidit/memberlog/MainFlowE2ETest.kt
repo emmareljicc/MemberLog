@@ -34,7 +34,11 @@ class MainFlowE2ETest {
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
         ActivityScenario.launch<MainActivity>(intent).use {
-            compose.onNodeWithContentDescription("Dodaj člana").performClick()
+            compose.onNodeWithContentDescription("Dodaj").performClick()
+            compose.waitUntil(timeoutMillis = 5_000) {
+                compose.onAllNodesWithText("Novi član").fetchSemanticsNodes().isNotEmpty()
+            }
+            compose.onNodeWithText("Novi član").performClick()
 
             compose.onNodeWithText("Ime i Prezime").performTextInput(name)
             compose.onNodeWithText("E-mail adresa").performTextInput("e2e$stamp@test.com")
@@ -56,6 +60,9 @@ class MainFlowE2ETest {
             }
 
             compose.onNodeWithContentDescription("Nadzorna ploča").performClick()
+            compose.waitUntil(timeoutMillis = 5_000) {
+                compose.onAllNodesWithText("Plaćeno ovaj mjesec").fetchSemanticsNodes().isNotEmpty()
+            }
             compose.onNodeWithText("Plaćeno ovaj mjesec").assertIsDisplayed()
         }
     }

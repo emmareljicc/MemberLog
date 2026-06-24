@@ -1,11 +1,8 @@
 package com.fidit.memberlog.ui.screens
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -17,16 +14,21 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fidit.memberlog.model.Role
 import com.fidit.memberlog.ui.DashboardViewModel
+import com.fidit.memberlog.ui.components.AppCard
+import com.fidit.memberlog.ui.components.LoadingSpinner
+import com.fidit.memberlog.ui.components.HeroCard
+import com.fidit.memberlog.ui.components.MemberAvatar
+import com.fidit.memberlog.ui.components.ScreenHeader
 import com.fidit.memberlog.ui.components.GrowthChart
 import com.fidit.memberlog.ui.components.ProgressRing
-import com.fidit.memberlog.ui.theme.DisplayFont
-import com.fidit.memberlog.ui.theme.FeePaid
-import com.fidit.memberlog.ui.theme.FeeUnpaid
+import com.fidit.memberlog.ui.theme.Dimens
+import com.fidit.memberlog.ui.theme.paidColor
+import com.fidit.memberlog.ui.theme.unpaidColor
 import com.fidit.memberlog.util.DateUtils
+import com.fidit.memberlog.util.Plurals
 import com.fidit.memberlog.util.roleColor
 
 @Composable
@@ -35,210 +37,142 @@ fun DashboardScreen(
     onMemberClick: (Int) -> Unit,
     viewModel: DashboardViewModel = viewModel()
 ) {
-    val stats by viewModel.stats.collectAsState()
-    val fraction = if (stats.totalMembers > 0) stats.paidThisMonth.toFloat() / stats.totalMembers else 0f
-    val pct = (fraction * 100).toInt()
+    val statsState by viewModel.stats.collectAsState()
+    val paid = paidColor()
+    val unpaid = unpaidColor()
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(16.dp)
+            .padding(Dimens.screenPadding)
     ) {
-        Text("Nadzorna ploča", fontFamily = DisplayFont, fontSize = 26.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-        Text("Pregled stanja kluba", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        ScreenHeader(title = "Nadzorna ploča", subtitle = "Pregled stanja kluba")
+        Spacer(Modifier.height(Dimens.gap))
 
-        Spacer(Modifier.height(16.dp))
+        val stats = statsState ?: run {
+            LoadingSpinner(Modifier.fillMaxWidth().height(300.dp))
+            return@Column
+        }
+        val fraction = if (stats.totalMembers > 0) stats.paidThisMonth.toFloat() / stats.totalMembers else 0f
+        val pct = (fraction * 100).toInt()
 
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(20.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                ProgressRing(
-                    fraction = fraction,
-                    ringColor = FeePaid,
-                    trackColor = MaterialTheme.colorScheme.outlineVariant
-                ) {
-                    Text("$pct%", fontFamily = DisplayFont, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+        HeroCard(modifier = Modifier.fillMaxWidth()) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                ProgressRing(fraction = fraction, ringColor = paid, trackColor = MaterialTheme.colorScheme.outlineVariant) {
+                    Text("$pct%", style = MaterialTheme.typography.titleLarge)
                 }
                 Spacer(Modifier.width(20.dp))
                 Column {
-                    Text("Plaćeno ovaj mjesec", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text(
-                        "${stats.paidThisMonth} / ${stats.totalMembers}",
-                        fontFamily = DisplayFont,
-                        fontSize = 28.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text("članova podmirilo", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("Plaćeno ovaj mjesec", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("${stats.paidThisMonth} / ${stats.totalMembers}", style = MaterialTheme.typography.displaySmall)
+                    Text("članova podmirilo", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }
 
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(Dimens.gap))
 
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            StatTile(
-                modifier = Modifier.weight(1f),
-                label = "Prikupljeno",
-                value = money(stats.collectedTotal),
-                valueColor = FeePaid
+        Row(horizontalArrangement = Arrangement.spacedBy(Dimens.gap)) {
+            StatTile(Modifier.weight(1f), "Prikupljeno", money(stats.collectedTotal), paid, "ukupno")
+            StatTile(Modifier.weight(1f), "Dugovanje", money(stats.outstandingTotal), if (stats.outstandingTotal > 0.0) unpaid else MaterialTheme.colorScheme.onSurface, "trenutno")
+        }
+
+        Spacer(Modifier.height(Dimens.gap))
+
+        AppCard(modifier = Modifier.fillMaxWidth()) {
+            Text("Rast članstva", style = MaterialTheme.typography.titleMedium)
+            Text("Ukupno ${Plurals.clanovi(stats.totalMembers)}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(Modifier.height(Dimens.gap))
+            GrowthChart(
+                values = stats.growth.map { it.second },
+                lineColor = MaterialTheme.colorScheme.primary,
+                fillColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                modifier = Modifier.fillMaxWidth().height(120.dp)
             )
-            StatTile(
-                modifier = Modifier.weight(1f),
-                label = "Dugovanje",
-                value = money(stats.outstandingTotal),
-                valueColor = if (stats.outstandingTotal > 0.0) FeeUnpaid else MaterialTheme.colorScheme.onSurface
-            )
-        }
-
-        Spacer(Modifier.height(12.dp))
-
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-        ) {
-            Column(Modifier.padding(20.dp)) {
-                Text("Rast članstva", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                Text("Ukupno ${stats.totalMembers} članova", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Spacer(Modifier.height(12.dp))
-                GrowthChart(
-                    values = stats.growth.map { it.second },
-                    lineColor = MaterialTheme.colorScheme.primary,
-                    fillColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(120.dp)
-                )
+            if (stats.growth.size >= 2) {
+                Spacer(Modifier.height(Dimens.gapSmall))
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text(DateUtils.formatPeriod(stats.growth.first().first), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(DateUtils.formatPeriod(stats.growth.last().first), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
             }
         }
 
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(Dimens.gap))
 
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-        ) {
-            Column(Modifier.padding(20.dp)) {
-                Text("Nadolazeći događaji", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.height(8.dp))
-                if (stats.upcomingEvents.isEmpty()) {
-                    Text("Nema nadolazećih događaja.", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                } else {
-                    stats.upcomingEvents.take(3).forEach { ev ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 6.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(ev.title, fontSize = 14.sp)
-                            Text(DateUtils.formatIsoDate(ev.date), fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
+        AppCard(modifier = Modifier.fillMaxWidth()) {
+            Text("Nadolazeća događanja", style = MaterialTheme.typography.titleMedium)
+            Spacer(Modifier.height(Dimens.gapSmall))
+            if (stats.upcomingEvents.isEmpty()) {
+                Text("Nema nadolazećih događanja.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            } else {
+                stats.upcomingEvents.take(3).forEach { ev ->
+                    Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text(ev.title, style = MaterialTheme.typography.bodyMedium)
+                        Text(DateUtils.formatIsoDate(ev.date), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }
         }
 
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(Dimens.gap))
 
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-        ) {
-            Column(Modifier.padding(20.dp)) {
-                Text("Treba pozornost", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.height(8.dp))
-                if (stats.topDebtors.isEmpty()) {
-                    Text("Svi članovi su podmireni.", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                } else {
-                    stats.topDebtors.take(5).forEach { (member, owed) ->
-                        val accent = rolesById[member.roleId]?.let { roleColor(it.colorHex) } ?: MaterialTheme.colorScheme.primary
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { onMemberClick(member.id) }
-                                .padding(vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(36.dp)
-                                    .clip(CircleShape)
-                                    .background(accent),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(initials(member.name), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                            }
-                            Spacer(Modifier.width(12.dp))
-                            Text(member.name, fontSize = 15.sp, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
-                            Text(money(owed), color = FeeUnpaid, fontWeight = FontWeight.Bold)
-                        }
+        AppCard(modifier = Modifier.fillMaxWidth()) {
+            Text("Dugovanja", style = MaterialTheme.typography.titleMedium)
+            Spacer(Modifier.height(Dimens.gapSmall))
+            if (stats.topDebtors.isEmpty()) {
+                Text("Svi članovi su podmireni.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            } else {
+                stats.topDebtors.take(5).forEach { (member, owed) ->
+                    val accent = rolesById[member.roleId]?.let { roleColor(it.colorHex) } ?: MaterialTheme.colorScheme.primary
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(MaterialTheme.shapes.small)
+                            .padding(vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        MemberAvatar(name = member.name, photoPath = member.photoPath, color = accent, size = 36.dp, fontSize = MaterialTheme.typography.labelMedium.fontSize)
+                        Spacer(Modifier.width(12.dp))
+                        Text(member.name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
+                        Text(money(owed), style = MaterialTheme.typography.titleSmall, color = unpaid)
                     }
                 }
             }
         }
 
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(Dimens.gap))
 
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-        ) {
-            Column(Modifier.padding(20.dp)) {
-                Text("Nedavne aktivnosti", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.height(8.dp))
-                if (stats.recentPayments.isEmpty()) {
-                    Text("Još nema zabilježenih uplata.", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                } else {
-                    stats.recentPayments.forEach { p ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 6.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text("${p.memberName} — ${DateUtils.formatPeriod(p.period)}", fontSize = 14.sp)
-                            Text(money(p.amount), fontSize = 14.sp, fontWeight = FontWeight.Medium, color = FeePaid)
-                        }
+        AppCard(modifier = Modifier.fillMaxWidth()) {
+            Text("Nedavne uplate", style = MaterialTheme.typography.titleMedium)
+            Spacer(Modifier.height(Dimens.gapSmall))
+            if (stats.recentPayments.isEmpty()) {
+                Text("Još nema zabilježenih uplata.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            } else {
+                stats.recentPayments.forEach { p ->
+                    Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text("${p.memberName}, ${DateUtils.formatPeriod(p.period)}", style = MaterialTheme.typography.bodyMedium)
+                        Text(money(p.amount), style = MaterialTheme.typography.titleSmall, color = paid)
                     }
                 }
             }
         }
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(Dimens.gap))
     }
 }
 
 @Composable
-private fun StatTile(modifier: Modifier, label: String, value: String, valueColor: Color) {
-    Card(
-        modifier = modifier,
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-    ) {
-        Column(Modifier.padding(16.dp)) {
-            Text(label, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Spacer(Modifier.height(4.dp))
-            Text(value, fontFamily = DisplayFont, fontSize = 22.sp, fontWeight = FontWeight.Bold, color = valueColor)
+private fun StatTile(modifier: Modifier, label: String, value: String, valueColor: Color, caption: String? = null) {
+    AppCard(modifier = modifier) {
+        Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Spacer(Modifier.height(4.dp))
+        Text(value, style = MaterialTheme.typography.titleLarge, color = valueColor)
+        if (caption != null) {
+            Text(caption, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
-}
-
-private fun initials(name: String): String {
-    val parts = name.split(" ")
-    return if (parts.size > 1) "${parts[0][0]}${parts[1][0]}" else name.take(1)
 }
 
 private fun money(v: Double): String =

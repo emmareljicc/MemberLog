@@ -40,7 +40,7 @@ class ExchangeRateViewModel : ViewModel() {
                 val response = api.getExchangeRates()
                 _rates.value = response.rates.filter { it.key in tracked }
             } catch (e: Exception) {
-                _errorMessage.value = "Nije moguće dohvatiti tečajnu listu. Provjerite internetsku vezu."
+                _errorMessage.value = "Nije moguće dohvatiti tečajnu listu. Provjeri internetsku vezu."
             } finally {
                 _isLoading.value = false
             }

@@ -1,7 +1,10 @@
 package com.fidit.memberlog.ui.screens
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,10 +38,10 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 
 private val BarHeight = 64.dp
-private val Overhang = 32.dp
-private val ButtonSize = 64.dp
-private val CornerRadius = 30.dp
-private val NotchRadius = 40.dp
+private val Overhang = 10.dp
+private val ButtonSize = 56.dp
+private val CornerRadius = 28.dp
+private val NotchRadius = 34.dp
 
 data class BottomDest(val icon: ImageVector, val contentDescription: String, val badgeCount: Int = 0)
 
@@ -47,7 +50,8 @@ fun MemberLogBottomBar(
     destinations: List<BottomDest>,
     selectedIndex: Int,
     onSelect: (Int) -> Unit,
-    onAddClick: (() -> Unit)? = null
+    onAddClick: (() -> Unit)? = null,
+    addExpanded: Boolean = false
 ) {
     if (onAddClick == null) {
         PlainBottomBar(destinations, selectedIndex, onSelect)
@@ -140,11 +144,14 @@ fun MemberLogBottomBar(
                 .clickable(onClick = onAddClick),
             contentAlignment = Alignment.Center
         ) {
+            val rotation by animateFloatAsState(if (addExpanded) 45f else 0f, label = "fabRotate")
             Icon(
                 imageVector = Icons.Default.Add,
-                contentDescription = "Dodaj člana",
+                contentDescription = "Dodaj",
                 tint = MaterialTheme.colorScheme.onPrimary,
-                modifier = Modifier.size(32.dp)
+                modifier = Modifier
+                    .size(26.dp)
+                    .graphicsLayer { rotationZ = rotation }
             )
         }
     }
@@ -211,7 +218,7 @@ private fun BottomNavItem(
                 imageVector = icon,
                 contentDescription = contentDescription,
                 tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(26.dp)
+                modifier = Modifier.size(24.dp)
             )
         }
         Spacer(modifier = Modifier.height(4.dp))

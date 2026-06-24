@@ -17,7 +17,7 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
 
     private val db = MemberDatabase.getInstance(app)
 
-    val stats: StateFlow<DashboardStats> = combine(
+    val stats: StateFlow<DashboardStats?> = combine(
         db.memberDao().getAll(),
         db.feeDao().allPayments(),
         db.feeDao().getConfig(),
@@ -30,9 +30,5 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
             events = events,
             today = LocalDate.now().toString()
         )
-    }.stateIn(
-        viewModelScope,
-        SharingStarted.WhileSubscribed(5_000),
-        DashboardStats(0, 0, 0.0, 0.0, emptyList(), emptyList(), emptyList(), emptyList())
-    )
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 }

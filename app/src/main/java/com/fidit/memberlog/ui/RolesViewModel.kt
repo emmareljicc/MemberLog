@@ -17,15 +17,15 @@ class RolesViewModel(app: Application) : AndroidViewModel(app) {
     private val db = MemberDatabase.getInstance(app)
     private val repo = RoleRepository(db.roleDao())
 
-    val roles: StateFlow<List<Role>> = repo.allRoles
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    val roles: StateFlow<List<Role>?> = repo.allRoles
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
-    val memberCounts: StateFlow<Map<Int, Int>> = combine(
+    val memberCounts: StateFlow<Map<Int, Int>?> = combine(
         repo.allRoles,
         db.memberDao().getAll()
     ) { roles, members ->
         roles.associate { role -> role.id to members.count { it.roleId == role.id } }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     fun addRole(name: String, colorHex: String, grantsAdmin: Boolean) {
         viewModelScope.launch { repo.insert(Role(name = name, colorHex = colorHex, grantsAdmin = grantsAdmin)) }

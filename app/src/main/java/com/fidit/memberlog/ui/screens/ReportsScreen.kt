@@ -3,107 +3,161 @@ package com.fidit.memberlog.ui.screens
 import android.content.Context
 import android.content.Intent
 import android.widget.Toast
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Group
+import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
-import com.fidit.memberlog.ui.theme.DisplayFont
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fidit.memberlog.ui.ReportsViewModel
+import com.fidit.memberlog.ui.components.AppCard
+import com.fidit.memberlog.ui.components.LoadingSpinner
+import com.fidit.memberlog.ui.components.ScreenHeader
+import com.fidit.memberlog.ui.components.SectionLabel
+import com.fidit.memberlog.ui.theme.Dimens
+import com.fidit.memberlog.util.DateUtils
 import com.fidit.memberlog.util.PdfReport
 import com.fidit.memberlog.util.ReportBuilder
 import java.io.File
+import java.time.LocalDate
+import java.time.YearMonth
 
+private enum class ExportPeriod(val label: String) {
+    MONTH("Ovaj mjesec"), YEAR("Ova godina"), ALL("Sve"), CUSTOM("Prilagođeno")
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReportsScreen(
     onBack: () -> Unit,
     viewModel: ReportsViewModel = viewModel()
 ) {
-    val data by viewModel.reportData.collectAsState()
+    val allData by viewModel.reportData.collectAsState()
     val context = LocalContext.current
+
+    var period by remember { mutableStateOf(ExportPeriod.MONTH) }
+    var customFrom by remember { mutableStateOf("") }
+    var customTo by remember { mutableStateOf("") }
+
+    val ym = YearMonth.now()
+    val yr = LocalDate.now().year
+    val fromIso: String?
+    val toIso: String?
+    when (period) {
+        ExportPeriod.MONTH -> { fromIso = ym.atDay(1).toString(); toIso = ym.atEndOfMonth().toString() }
+        ExportPeriod.YEAR -> { fromIso = "$yr-01-01"; toIso = "$yr-12-31" }
+        ExportPeriod.ALL -> { fromIso = null; toIso = null }
+        ExportPeriod.CUSTOM -> { fromIso = customFrom.ifBlank { null }; toIso = customTo.ifBlank { null } }
+    }
+    val data = remember(allData, fromIso, toIso) { allData?.let { ReportBuilder.filterByRange(it, fromIso, toIso) } }
+
+    val periodLabel = when (period) {
+        ExportPeriod.MONTH -> DateUtils.formatPeriod(ym.toString())
+        ExportPeriod.YEAR -> "$yr"
+        ExportPeriod.ALL -> "Sve"
+        ExportPeriod.CUSTOM -> if (fromIso != null || toIso != null) "od ${fromIso ?: "…"} do ${toIso ?: "…"}" else "Sve"
+    }
+    val suffix = when (period) {
+        ExportPeriod.MONTH -> ym.toString()
+        ExportPeriod.YEAR -> "$yr"
+        ExportPeriod.ALL -> "sve"
+        ExportPeriod.CUSTOM -> "${fromIso ?: "x"}_${toIso ?: "x"}"
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .verticalScroll(rememberScrollState())
+            .padding(Dimens.screenPadding)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { onBack() },
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Natrag", tint = MaterialTheme.colorScheme.primary)
-            Spacer(Modifier.width(8.dp))
-            Text("Natrag", color = MaterialTheme.colorScheme.primary, fontSize = 16.sp)
+        ScreenHeader(title = "Izvještaji", subtitle = "Izvezi podatke i sažetak kluba", onBack = onBack)
+        Spacer(Modifier.height(Dimens.sectionGap))
+
+        if (data == null) {
+            LoadingSpinner()
+            return@Column
         }
 
-        Spacer(Modifier.height(16.dp))
-        Text("Izvještaji", fontFamily = DisplayFont, fontSize = 26.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-        Text("Izvezi podatke i sažetak kluba", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-
-        Spacer(Modifier.height(20.dp))
-
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-        ) {
-            Column(Modifier.padding(16.dp)) {
-                Text("Sadržaj", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                Spacer(Modifier.height(4.dp))
-                Text("Članova: ${data.totals.members}", fontSize = 13.sp)
-                Text("Uplata: ${data.paymentRows.size}", fontSize = 13.sp)
-                Text("Događaja: ${data.eventRows.size}", fontSize = 13.sp)
+        SectionLabel("RAZDOBLJE")
+        Spacer(Modifier.height(Dimens.gapSmall))
+        AppCard(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(Dimens.gapSmall)
+            ) {
+                ExportPeriod.entries.forEach { p ->
+                    FilterChip(selected = period == p, onClick = { period = p }, label = { Text(p.label) })
+                }
             }
+            if (period == ExportPeriod.CUSTOM) {
+                Spacer(Modifier.height(Dimens.gap))
+                Row(horizontalArrangement = Arrangement.spacedBy(Dimens.gap)) {
+                    OutlinedTextField(value = customFrom, onValueChange = { customFrom = it }, label = { Text("Od (GGGG-MM-DD)") }, singleLine = true, shape = MaterialTheme.shapes.small, modifier = Modifier.weight(1f))
+                    OutlinedTextField(value = customTo, onValueChange = { customTo = it }, label = { Text("Do (GGGG-MM-DD)") }, singleLine = true, shape = MaterialTheme.shapes.small, modifier = Modifier.weight(1f))
+                }
+            }
+            Spacer(Modifier.height(Dimens.gap))
+            Text(
+                "${data.paymentRows.size} uplata · ${data.eventRows.size} događanja · ${money(data.totals.collected)} prikupljeno",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
 
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(Dimens.sectionGap))
+        SectionLabel("IZVOZ")
+        Spacer(Modifier.height(Dimens.gapSmall))
 
-        ExportButton(Icons.Default.Description, "Izvezi članove (CSV)") {
-            shareText(context, "clanovi.csv", "text/csv", ReportBuilder.membersCsv(data))
+        ExportRow(Icons.Default.Group, "Članovi (CSV)", "${data.memberRows.size} članova") {
+            shareText(context, "clanovi_$suffix.csv", "text/csv", ReportBuilder.membersCsv(data))
         }
-        Spacer(Modifier.height(12.dp))
-        ExportButton(Icons.Default.Description, "Izvezi uplate (CSV)") {
-            shareText(context, "uplate.csv", "text/csv", ReportBuilder.paymentsCsv(data))
+        Spacer(Modifier.height(Dimens.gapSmall))
+        ExportRow(Icons.Default.Payments, "Uplate (CSV)", "${data.paymentRows.size} uplata u razdoblju") {
+            shareText(context, "uplate_$suffix.csv", "text/csv", ReportBuilder.paymentsCsv(data))
         }
-        Spacer(Modifier.height(12.dp))
-        ExportButton(Icons.Default.PictureAsPdf, "Izvezi izvještaj (PDF)") {
-            val file = PdfReport.write(context, data)
+        Spacer(Modifier.height(Dimens.gapSmall))
+        ExportRow(Icons.Default.PictureAsPdf, "Cijeli izvještaj (PDF)", "Sažetak, dugovanja i događanja") {
+            val file = PdfReport.write(context, data, periodLabel)
             shareFile(context, file, "application/pdf")
         }
+
+        Spacer(Modifier.height(Dimens.gap))
     }
 }
 
 @Composable
-private fun ExportButton(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, onClick: () -> Unit) {
-    Button(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth().height(52.dp),
-        shape = RoundedCornerShape(16.dp)
-    ) {
-        Icon(icon, contentDescription = null)
-        Spacer(Modifier.width(8.dp))
-        Text(label)
+private fun ExportRow(icon: ImageVector, title: String, subtitle: String, onClick: () -> Unit) {
+    AppCard(modifier = Modifier.fillMaxWidth(), onClick = onClick, contentPadding = 16.dp) {
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            Spacer(Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(title, style = MaterialTheme.typography.titleMedium)
+                Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
     }
 }
 
+private fun money(v: Double): String =
+    (if (v % 1.0 == 0.0) v.toInt().toString() else "%.2f".format(v)) + " €"
+
 private fun shareText(context: Context, fileName: String, mime: String, content: String) {
-    val dir = File(context.cacheDir, "reports").apply { mkdirs() }
+    val dir = File(context.getExternalFilesDir(null), "exports").apply { mkdirs() }
     val file = File(dir, fileName)
     file.writeText(content, Charsets.UTF_8)
     shareFile(context, file, mime)

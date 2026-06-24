@@ -18,4 +18,5 @@ Thumbs.db
 *.aab
 *.md
 *.pdf
-.vscode/
+/exports
+/.vscode

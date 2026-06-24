@@ -100,9 +100,21 @@ object ReportBuilder {
         return ReportData(memberRows, paymentRows, eventRows, totals)
     }
 
+    fun filterByRange(data: ReportData, fromIso: String?, toIso: String?): ReportData {
+        if (fromIso == null && toIso == null) return data
+        fun inRange(d: String): Boolean = (fromIso == null || d >= fromIso) && (toIso == null || d <= toIso)
+        val payments = data.paymentRows.filter { inRange(it.paidDate) }
+        val events = data.eventRows.filter { inRange(it.date) }
+        return data.copy(
+            paymentRows = payments,
+            eventRows = events,
+            totals = data.totals.copy(collected = payments.sumOf { it.amount })
+        )
+    }
+
     fun membersCsv(data: ReportData): String {
         val sb = StringBuilder()
-        sb.append("Ime,Uloga,Datum uclanjenja,E-mail,Telefon,Dugovanje (EUR)\n")
+        sb.append("Ime,Uloga,Datum učlanjenja,E-mail,Telefon,Dugovanje (EUR)\n")
         data.memberRows.forEach { r ->
             sb.append(
                 listOf(r.name, r.role, r.joinDate, r.email, r.phone, money(r.owed))
@@ -115,7 +127,7 @@ object ReportBuilder {
 
     fun paymentsCsv(data: ReportData): String {
         val sb = StringBuilder()
-        sb.append("Clan,Mjesec,Iznos (EUR),Datum\n")
+        sb.append("Član,Mjesec,Iznos (EUR),Datum\n")
         data.paymentRows.forEach { r ->
             sb.append(
                 listOf(r.memberName, r.period, money(r.amount), r.paidDate)

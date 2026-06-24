@@ -47,7 +47,11 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fidit.memberlog.model.Role
 import com.fidit.memberlog.ui.RolesViewModel
-import com.fidit.memberlog.ui.theme.DisplayFont
+import com.fidit.memberlog.ui.components.AppCard
+import com.fidit.memberlog.ui.components.LoadingSpinner
+import com.fidit.memberlog.ui.components.ScreenHeader
+import com.fidit.memberlog.ui.theme.Dimens
+import com.fidit.memberlog.util.Plurals
 import com.fidit.memberlog.util.roleColor
 
 @Composable
@@ -56,18 +60,18 @@ fun RolesScreen(
     onBack: () -> Unit,
     viewModel: RolesViewModel = viewModel()
 ) {
-    val roles by viewModel.roles.collectAsState()
-    val counts by viewModel.memberCounts.collectAsState()
+    val rolesState by viewModel.roles.collectAsState()
+    val countsState by viewModel.memberCounts.collectAsState()
 
     var showForm by remember { mutableStateOf(false) }
     var editing by remember { mutableStateOf<Role?>(null) }
     var deleting by remember { mutableStateOf<Role?>(null) }
 
     if (showForm) {
-        RoleFormDialog(
+        RoleFormScreen(
             title = if (editing == null) "Nova uloga" else "Uredi ulogu",
             existing = editing,
-            onDismiss = { showForm = false },
+            onBack = { showForm = false },
             onSubmit = { name, color, grantsAdmin ->
                 val current = editing
                 if (current == null) viewModel.addRole(name, color, grantsAdmin)
@@ -75,6 +79,14 @@ fun RolesScreen(
                 showForm = false
             }
         )
+        return
+    }
+
+    val roles = rolesState
+    val counts = countsState
+    if (roles == null || counts == null) {
+        LoadingSpinner()
+        return
     }
 
     deleting?.let { role ->
@@ -95,27 +107,9 @@ fun RolesScreen(
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { onBack() },
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Natrag", tint = MaterialTheme.colorScheme.primary)
-            Spacer(Modifier.width(8.dp))
-            Text("Natrag", color = MaterialTheme.colorScheme.primary, fontSize = 16.sp)
-        }
+        ScreenHeader(title = "Uloge", subtitle = "Upravljaj ulogama i njihovim bojama", onBack = onBack)
 
-        Spacer(Modifier.height(16.dp))
-
-        Text("Uloge", fontFamily = DisplayFont, fontSize = 26.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-        Text(
-            "Upravljaj ulogama i njihovim bojama",
-            fontSize = 14.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(Dimens.gap))
 
         if (isAdmin) {
             Button(
@@ -133,17 +127,13 @@ fun RolesScreen(
 
         LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             items(roles) { role ->
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .then(if (isAdmin) Modifier.clickable { editing = role; showForm = true } else Modifier),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                AppCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = if (isAdmin) ({ editing = role; showForm = true }) else null,
+                    contentPadding = 16.dp
                 ) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
+                        modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Box(
@@ -156,7 +146,7 @@ fun RolesScreen(
                         Column(modifier = Modifier.weight(1f)) {
                             Text(role.name, fontSize = 16.sp, fontWeight = FontWeight.Bold)
                             Text(
-                                "${counts[role.id] ?: 0} članova" + if (role.grantsAdmin) " • administrator" else "",
+                                Plurals.clanovi(counts[role.id] ?: 0) + if (role.grantsAdmin) " • administrator" else "",
                                 fontSize = 12.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -199,9 +189,9 @@ private fun DeleteRoleDialog(
                 if (memberCount == 0) {
                     Text("Nijedan član nema ovu ulogu. Sigurno obrisati?")
                 } else if (blocked) {
-                    Text("Ova uloga ima $memberCount člana, a nema druge uloge na koju ih premjestiti. Prvo dodajte drugu ulogu.")
+                    Text("Ova uloga ima ${Plurals.clanovi(memberCount)}, a nema druge uloge na koju ih premjestiti. Prvo dodaj drugu ulogu.")
                 } else {
-                    Text("$memberCount član(ova) ima ovu ulogu. Premjesti ih na:")
+                    Text("${Plurals.clanovi(memberCount)} ima ovu ulogu. Premjesti ih na:")
                     Spacer(Modifier.height(8.dp))
                     otherRoles.forEach { r ->
                         Row(

@@ -16,4 +16,8 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
     fun login(email: String, password: String, onResult: (LoginResult?) -> Unit) {
         viewModelScope.launch { onResult(repo.login(email, password)) }
     }
+
+    fun register(name: String, roleId: Int, email: String, phone: String, password: String, onResult: (LoginResult?) -> Unit) {
+        viewModelScope.launch { onResult(repo.register(name, roleId, email, phone, password)) }
+    }
 }

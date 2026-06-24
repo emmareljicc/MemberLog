@@ -31,7 +31,12 @@ class ActivityRepository(private val dao: ActivityDao) {
     fun rsvpMemberIds(eventId: Int): Flow<List<Int>> = dao.rsvpMemberIds(eventId)
 
     suspend fun setRsvp(eventId: Int, memberId: Int, coming: Boolean) {
-        if (coming) dao.addRsvp(EventRsvp(eventId, memberId))
-        else dao.removeRsvp(eventId, memberId)
+        if (coming) {
+            dao.addRsvp(EventRsvp(eventId, memberId))
+            dao.addAttendance(Attendance(eventId, memberId))
+        } else {
+            dao.removeRsvp(eventId, memberId)
+            dao.removeAttendance(eventId, memberId)
+        }
     }
 }

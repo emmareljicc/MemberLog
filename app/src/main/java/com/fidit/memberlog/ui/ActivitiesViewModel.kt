@@ -16,8 +16,8 @@ class ActivitiesViewModel(app: Application) : AndroidViewModel(app) {
 
     private val repo = ActivityRepository(MemberDatabase.getInstance(app).activityDao())
 
-    val events: StateFlow<List<Event>> = repo.allEvents
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    val events: StateFlow<List<Event>?> = repo.allEvents
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     fun attendeeIds(eventId: Int): Flow<List<Int>> = repo.attendeeIds(eventId)
 

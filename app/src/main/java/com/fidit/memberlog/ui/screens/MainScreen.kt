@@ -1,13 +1,12 @@
 package com.fidit.memberlog.ui.screens
 
 import android.widget.Toast
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.Dashboard
-import androidx.compose.material.icons.filled.Event
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.Event
+import androidx.compose.material.icons.outlined.GridView
+import androidx.compose.material.icons.outlined.Group
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -15,6 +14,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fidit.memberlog.ui.ActivitiesViewModel
 import com.fidit.memberlog.ui.MembersViewModel
+import com.fidit.memberlog.ui.RolesViewModel
+import com.fidit.memberlog.ui.components.AddActionSheet
 import com.fidit.memberlog.util.DateUtils
 import java.time.LocalDate
 
@@ -24,27 +25,31 @@ fun MainScreen(
     isDarkMode: Boolean,
     onThemeChanged: (Boolean) -> Unit,
     isAdmin: Boolean,
+    memberId: Int,
+    onOpenMyProfile: () -> Unit,
     viewModel: MembersViewModel = viewModel(),
-    activitiesViewModel: ActivitiesViewModel = viewModel()
+    activitiesViewModel: ActivitiesViewModel = viewModel(),
+    rolesViewModel: RolesViewModel = viewModel()
 ) {
     val context = LocalContext.current
     var selectedTab by remember { mutableIntStateOf(0) }
     var selectedMemberId by remember { mutableStateOf<Int?>(null) }
     var selectedEventId by remember { mutableStateOf<Int?>(null) }
     var showAddDialog by remember { mutableStateOf(false) }
+    var showAddSheet by remember { mutableStateOf(false) }
+    var showAddEvent by remember { mutableStateOf(false) }
+    var showAddRole by remember { mutableStateOf(false) }
 
     var showRoles by remember { mutableStateOf(false) }
     var showReports by remember { mutableStateOf(false) }
     var showExchangeRates by remember { mutableStateOf(false) }
 
-    // Pomoćna funkcija koja zatvara sve pod-ekrane odjednom
-    // Ovo sprječava "Assigned value is never read" jer se poziva kroz funkciju!
     fun resetSubScreens() {
         selectedMemberId = null
         selectedEventId = null
-        if (showRoles) showRoles = false
-        if (showReports) showReports = false
-        if (showExchangeRates) showExchangeRates = false
+        showRoles = false
+        showReports = false
+        showExchangeRates = false
     }
 
     val members by viewModel.members.collectAsState()
@@ -52,18 +57,21 @@ fun MainScreen(
     val rolesById by viewModel.rolesById.collectAsState()
     val events by activitiesViewModel.events.collectAsState()
     val roles = rolesById.values.sortedBy { it.name }
-    val selectedMember = members.find { it.id == selectedMemberId }
+    val selectedMember = members?.find { it.id == selectedMemberId }
+    val currentUser = members?.find { it.id == memberId }
+    val currentUserName = currentUser?.name ?: ""
+    val currentUserRole = currentUser?.let { rolesById[it.roleId]?.name } ?: ""
 
     val today = DateUtils.todayIso()
     val soonLimit = LocalDate.now().plusDays(14).toString()
-    val debtorCount = owedByMember.values.count { it > 0.0 }
-    val upcomingSoon = events.count { it.date in today..soonLimit }
+    val debtorCount = owedByMember.orEmpty().values.count { it > 0.0 }
+    val upcomingSoon = events.orEmpty().count { it.date in today..soonLimit }
 
     val destinations = listOf(
-        BottomDest(Icons.Filled.Dashboard, "Nadzorna ploča"),
-        BottomDest(Icons.AutoMirrored.Filled.List, "Članovi", debtorCount),
-        BottomDest(Icons.Filled.Event, "Aktivnosti", upcomingSoon),
-        BottomDest(Icons.Filled.Settings, "Postavke")
+        BottomDest(Icons.Outlined.GridView, "Nadzorna ploča"),
+        BottomDest(Icons.Outlined.Group, "Članovi", debtorCount),
+        BottomDest(Icons.Outlined.Event, "Aktivnosti", upcomingSoon),
+        BottomDest(Icons.Outlined.Settings, "Postavke")
     )
 
     Scaffold(
@@ -77,13 +85,12 @@ fun MainScreen(
                 },
                 onAddClick = {
                     if (isAdmin) {
-                        resetSubScreens()
-                        showAddDialog = true
-                        selectedTab = 1
+                        showAddSheet = true
                     } else {
                         Toast.makeText(context, "Samo administrator može dodavati", Toast.LENGTH_SHORT).show()
                     }
-                }
+                },
+                addExpanded = showAddSheet
             )
         }
     ) { innerPadding ->
@@ -93,6 +100,25 @@ fun MainScreen(
                 .padding(innerPadding)
         ) {
             when {
+                showAddDialog -> MemberFormScreen(
+                    mode = MemberFormMode.ADMIN_CREATE,
+                    roles = roles,
+                    onBack = { showAddDialog = false },
+                    onSubmit = { name, roleId, email, phone, feeOverride, status, address, notes, photoPath, password ->
+                        viewModel.addMember(name, roleId, email, phone, feeOverride, status, address, notes, photoPath, password)
+                        showAddDialog = false
+                    }
+                )
+                showAddEvent -> EventFormScreen(
+                    title = "Novo događanje",
+                    onBack = { showAddEvent = false },
+                    onSubmit = { t, d, l, n -> activitiesViewModel.addEvent(t, d, l, n); showAddEvent = false }
+                )
+                showAddRole -> RoleFormScreen(
+                    title = "Nova uloga",
+                    onBack = { showAddRole = false },
+                    onSubmit = { name, color, grantsAdmin -> rolesViewModel.addRole(name, color, grantsAdmin); showAddRole = false }
+                )
                 showRoles -> RolesScreen(isAdmin = isAdmin, onBack = { showRoles = false })
                 showReports -> ReportsScreen(onBack = { showReports = false })
                 showExchangeRates -> ExchangeRateScreen(onBack = { showExchangeRates = false })
@@ -103,7 +129,8 @@ fun MainScreen(
                         selectedTab = 1
                     }
                 )
-                selectedTab == 1 -> AnimatedContent(targetState = selectedMember, label = "members") { m ->
+                selectedTab == 1 -> run {
+                    val m = selectedMember
                     if (m == null) {
                         MembersListScreen(
                             members = members,
@@ -125,13 +152,14 @@ fun MainScreen(
                         )
                     }
                 }
-                selectedTab == 2 -> AnimatedContent(targetState = selectedEventId, label = "events") { id ->
+                selectedTab == 2 -> run {
+                    val id = selectedEventId
                     if (id == null) {
                         ActivitiesScreen(isAdmin = isAdmin, onEventClick = { selectedEventId = it })
                     } else {
                         EventDetailScreen(
                             eventId = id,
-                            members = members,
+                            members = members.orEmpty(),
                             rolesById = rolesById,
                             isAdmin = isAdmin,
                             onBack = { selectedEventId = null }
@@ -142,6 +170,9 @@ fun MainScreen(
                     isDarkMode = isDarkMode,
                     onThemeChanged = onThemeChanged,
                     isAdmin = isAdmin,
+                    userName = currentUserName,
+                    userRole = currentUserRole,
+                    onOpenMyProfile = onOpenMyProfile,
                     onManageRoles = { showRoles = true },
                     onOpenReports = { showReports = true },
                     onNavigateToExchangeRates = { showExchangeRates = true }
@@ -149,17 +180,25 @@ fun MainScreen(
             }
         }
 
-        if (showAddDialog) {
-            MemberFormDialog(
-                title = "Dodaj novog člana",
-                roles = roles,
-                confirmLabel = "Dodaj",
-                onDismiss = { showAddDialog = false },
-                onSubmit = { name, roleId, email, phone, feeOverride, status, address, notes, photoPath, password ->
-                    viewModel.addMember(name, roleId, email, phone, feeOverride, status, address, notes, photoPath, password)
-                    showAddDialog = false
+        if (showAddSheet) {
+            AddActionSheet(
+                onDismiss = { showAddSheet = false },
+                onAddMember = {
+                    showAddSheet = false
+                    resetSubScreens()
+                    selectedTab = 1
+                    showAddDialog = true
+                },
+                onAddEvent = {
+                    showAddSheet = false
+                    showAddEvent = true
+                },
+                onAddRole = {
+                    showAddSheet = false
+                    showAddRole = true
                 }
             )
         }
+
     }
 }

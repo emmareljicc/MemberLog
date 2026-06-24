@@ -5,6 +5,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.graphics.Color
+
+val LocalDarkTheme = staticCompositionLocalOf { false }
 
 private val DarkColorScheme = darkColorScheme(
     primary = DarkPrimary,
@@ -19,8 +24,13 @@ private val DarkColorScheme = darkColorScheme(
     onSurface = DarkOnSurface,
     surfaceVariant = DarkSurfaceVariant,
     onSurfaceVariant = DarkOnSurfaceVariant,
+    surfaceContainerLowest = DarkContainerLowest,
+    surfaceContainerLow = DarkContainerLow,
+    surfaceContainer = DarkContainer2,
+    surfaceContainerHigh = DarkContainerHigh,
+    surfaceContainerHighest = DarkContainerHighest,
     outline = DarkOutline,
-    outlineVariant = DarkSurfaceVariant,
+    outlineVariant = DarkOutlineVariant,
     error = StatusUnpaidDark,
     onError = DarkOnPrimary
 )
@@ -38,8 +48,13 @@ private val LightColorScheme = lightColorScheme(
     onSurface = LightOnSurface,
     surfaceVariant = LightSurfaceVariant,
     onSurfaceVariant = LightOnSurfaceVariant,
+    surfaceContainerLowest = LightContainerLowest,
+    surfaceContainerLow = LightContainerLow,
+    surfaceContainer = LightContainer,
+    surfaceContainerHigh = LightContainerHigh,
+    surfaceContainerHighest = LightContainerHighest,
     outline = LightOutline,
-    outlineVariant = LightSurfaceVariant,
+    outlineVariant = LightOutlineVariant,
     error = StatusUnpaid,
     onError = IrisOnPrimary
 )
@@ -51,9 +66,21 @@ fun MemberLogTheme(
 ) {
     val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
-    )
+    CompositionLocalProvider(LocalDarkTheme provides darkTheme) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = Typography,
+            shapes = AppShapes,
+            content = content
+        )
+    }
 }
+
+@Composable
+fun paidColor(): Color = if (LocalDarkTheme.current) StatusPaidDark else StatusPaid
+
+@Composable
+fun partialColor(): Color = if (LocalDarkTheme.current) StatusPartialDark else StatusPartial
+
+@Composable
+fun unpaidColor(): Color = if (LocalDarkTheme.current) StatusUnpaidDark else StatusUnpaid

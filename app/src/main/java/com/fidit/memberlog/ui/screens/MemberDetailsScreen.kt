@@ -1,14 +1,9 @@
 package com.fidit.memberlog.ui.screens
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarMonth
@@ -28,22 +23,24 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fidit.memberlog.model.Member
 import com.fidit.memberlog.model.MembershipStatus
 import com.fidit.memberlog.model.Role
-import com.fidit.memberlog.ui.components.MemberAvatar
 import com.fidit.memberlog.ui.ActivitiesViewModel
 import com.fidit.memberlog.ui.FeeViewModel
+import com.fidit.memberlog.ui.components.AppCard
 import com.fidit.memberlog.ui.components.FeeHeatmap
-import com.fidit.memberlog.ui.theme.DisplayFont
-import com.fidit.memberlog.ui.theme.FeePaid
-import com.fidit.memberlog.ui.theme.FeeUnpaid
+import com.fidit.memberlog.ui.components.HeroCard
+import com.fidit.memberlog.ui.components.LoadingSpinner
+import com.fidit.memberlog.ui.components.MemberAvatar
+import com.fidit.memberlog.ui.components.ScreenHeader
+import com.fidit.memberlog.ui.components.StatusPill
+import com.fidit.memberlog.ui.theme.Dimens
+import com.fidit.memberlog.ui.theme.paidColor
+import com.fidit.memberlog.ui.theme.unpaidColor
 import com.fidit.memberlog.util.DateUtils
 import com.fidit.memberlog.util.FeeCalculator
 import com.fidit.memberlog.util.PasswordHash
@@ -67,278 +64,164 @@ fun MemberDetailsScreen(
     val accent = role?.let { roleColor(it.colorHex) } ?: MaterialTheme.colorScheme.primary
 
     val config by feeViewModel.config.collectAsState()
-    val payments by feeViewModel.paymentsFor(member.id).collectAsState(initial = emptyList())
-    val attendedEvents by activitiesViewModel.attendedEvents(member.id).collectAsState(initial = emptyList())
+    val payments by feeViewModel.paymentsFor(member.id).collectAsState(initial = null)
+    val attendedState by activitiesViewModel.attendedEvents(member.id).collectAsState(initial = null)
+
+    val paymentList = payments
+    val attendedEvents = attendedState
+    if (paymentList == null || attendedEvents == null) {
+        LoadingSpinner()
+        return
+    }
 
     val monthlyFee = FeeCalculator.monthlyFeeFor(member.monthlyFeeOverride, config.defaultMonthlyFee)
-    val statuses = FeeCalculator.computeStatuses(member.joinDate, monthlyFee, payments)
+    val statuses = FeeCalculator.computeStatuses(member.joinDate, monthlyFee, paymentList)
     val owed = FeeCalculator.totalOwed(statuses)
     val owedMonths = FeeCalculator.owedMonthsCount(statuses)
+    val owing = owed > 0.0
 
-    if (showEditDialog) {
-        MemberFormDialog(
-            title = "Uredi člana",
+    val ms = MembershipStatus.from(member.status)
+    val statusColor = when (ms) {
+        MembershipStatus.ACTIVE -> paidColor()
+        MembershipStatus.INACTIVE -> MaterialTheme.colorScheme.onSurfaceVariant
+        MembershipStatus.HONORARY -> MaterialTheme.colorScheme.primary
+    }
+
+    val rp = recordPeriod
+    when {
+        showEditDialog -> MemberFormScreen(
+            mode = MemberFormMode.ADMIN_EDIT,
             roles = roles,
             existing = member,
-            confirmLabel = "Spremi",
-            onDismiss = { showEditDialog = false },
+            onBack = { showEditDialog = false },
             onSubmit = { name, roleId, email, phone, feeOverride, status, address, notes, photoPath, password ->
                 onUpdate(
                     member.copy(
-                        name = name,
-                        roleId = roleId,
-                        email = email,
-                        phone = phone,
-                        monthlyFeeOverride = feeOverride,
-                        status = status,
-                        address = address,
-                        notes = notes,
-                        photoPath = photoPath,
+                        name = name, roleId = roleId, email = email, phone = phone,
+                        monthlyFeeOverride = feeOverride, status = status, address = address,
+                        notes = notes, photoPath = photoPath,
                         passwordHash = password?.let { PasswordHash.sha256(it) } ?: member.passwordHash
                     )
                 )
                 showEditDialog = false
             }
         )
-    }
-
-    recordPeriod?.let { period ->
-        RecordPaymentDialog(
-            period = period,
+        rp != null -> RecordPaymentScreen(
+            period = rp,
             expectedAmount = monthlyFee,
-            onDismiss = { recordPeriod = null },
-            onConfirm = { amount, dateIso ->
-                feeViewModel.recordPayment(member.id, period, amount, dateIso)
-                recordPeriod = null
-            }
+            onBack = { recordPeriod = null },
+            onConfirm = { amount, dateIso -> feeViewModel.recordPayment(member.id, rp, amount, dateIso); recordPeriod = null }
         )
-    }
-
-    Column(
+        else -> Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(16.dp)
+            .padding(Dimens.screenPadding)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { onBack() },
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Natrag",
-                tint = MaterialTheme.colorScheme.primary
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("Natrag na listu", color = MaterialTheme.colorScheme.primary, fontSize = 16.sp)
-        }
+        ScreenHeader(title = "Profil člana", onBack = onBack)
+        Spacer(Modifier.height(Dimens.gap))
 
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                MemberAvatar(
-                    name = member.name,
-                    photoPath = member.photoPath,
-                    color = accent,
-                    size = 80.dp,
-                    fontSize = 28.sp
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Text(member.name, fontFamily = DisplayFont, fontSize = 24.sp, fontWeight = FontWeight.Bold)
-                Text(
-                    text = (role?.name ?: "").uppercase(),
-                    fontSize = 14.sp,
-                    color = accent,
-                    fontWeight = FontWeight.SemiBold
-                )
-
-                val ms = MembershipStatus.from(member.status)
-                val statusColor = when (ms) {
-                    MembershipStatus.ACTIVE -> FeePaid
-                    MembershipStatus.INACTIVE -> MaterialTheme.colorScheme.onSurfaceVariant
-                    MembershipStatus.HONORARY -> MaterialTheme.colorScheme.primary
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(statusColor.copy(alpha = 0.15f))
-                        .padding(horizontal = 12.dp, vertical = 4.dp)
-                ) {
-                    Text(ms.label, color = statusColor, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-                HorizontalDivider()
-                Spacer(modifier = Modifier.height(24.dp))
-
+        HeroCard(modifier = Modifier.fillMaxWidth(), contentPadding = 24.dp) {
+            Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                MemberAvatar(name = member.name, photoPath = member.photoPath, color = accent, size = Dimens.avatarLarge, fontSize = MaterialTheme.typography.displaySmall.fontSize)
+                Spacer(Modifier.height(Dimens.gap))
+                Text(member.name, style = MaterialTheme.typography.headlineSmall)
+                Text((role?.name ?: "").uppercase(), style = MaterialTheme.typography.labelMedium, color = accent)
+                Spacer(Modifier.height(Dimens.gapSmall))
+                StatusPill(ms.label, statusColor)
+                Spacer(Modifier.height(20.dp))
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                Spacer(Modifier.height(20.dp))
                 InfoRow(Icons.Default.CalendarMonth, "Član od", DateUtils.formatIsoDate(member.joinDate))
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(Modifier.height(Dimens.gap))
                 InfoRow(Icons.Default.Email, "E-mail adresa", member.email)
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(Modifier.height(Dimens.gap))
                 InfoRow(Icons.Default.Phone, "Broj mobitela", member.phone)
                 if (member.address.isNotBlank()) {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    InfoRow(Icons.Default.Place, "Adresa", member.address)
+                    Spacer(Modifier.height(Dimens.gap)); InfoRow(Icons.Default.Place, "Adresa", member.address)
                 }
                 if (member.notes.isNotBlank()) {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    InfoRow(Icons.AutoMirrored.Filled.Notes, "Bilješke", member.notes)
+                    Spacer(Modifier.height(Dimens.gap)); InfoRow(Icons.AutoMirrored.Filled.Notes, "Bilješke", member.notes)
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(Modifier.height(Dimens.gap))
 
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-        ) {
-            Column(modifier = Modifier.padding(20.dp)) {
-                Text("Članarina", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+        AppCard(modifier = Modifier.fillMaxWidth(), contentPadding = 20.dp) {
+            Text("Članarina", style = MaterialTheme.typography.titleMedium)
+            Text(
+                "Mjesečni iznos: ${money(monthlyFee)}" + if (member.monthlyFeeOverride != null) " (poseban)" else "",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(Modifier.height(Dimens.gap))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(if (owing) Icons.Default.Error else Icons.Default.CheckCircle, contentDescription = null, tint = if (owing) unpaidColor() else paidColor())
+                Spacer(Modifier.width(Dimens.gapSmall))
                 Text(
-                    "Mjesečni iznos: ${money(monthlyFee)}" +
-                        if (member.monthlyFeeOverride != null) " (poseban)" else "",
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    if (owing) "Duguje: $owedMonths mj = ${money(owed)}" else "Sve podmireno",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = if (owing) unpaidColor() else paidColor()
                 )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                val owing = owed > 0.0
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = if (owing) Icons.Default.Error else Icons.Default.CheckCircle,
-                        contentDescription = null,
-                        tint = if (owing) FeeUnpaid else FeePaid
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = if (owing) "Duguje: $owedMonths mj = ${money(owed)}" else "Sve podmireno",
-                        color = if (owing) FeeUnpaid else FeePaid,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                FeeHeatmap(
-                    statuses = statuses,
-                    onCellClick = { if (isAdmin) recordPeriod = it },
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                if (isAdmin) {
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Button(
-                        onClick = { recordPeriod = DateUtils.currentYearMonth() },
-                        modifier = Modifier.fillMaxWidth().height(48.dp),
-                        shape = RoundedCornerShape(14.dp)
-                    ) {
-                        Icon(Icons.Default.Add, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Zabilježi uplatu")
-                    }
+            }
+            Spacer(Modifier.height(Dimens.gap))
+            FeeHeatmap(statuses = statuses, onCellClick = { if (isAdmin) recordPeriod = it }, modifier = Modifier.fillMaxWidth())
+            if (isAdmin) {
+                Spacer(Modifier.height(Dimens.gap))
+                Button(onClick = { recordPeriod = DateUtils.currentYearMonth() }, modifier = Modifier.fillMaxWidth().height(48.dp), shape = MaterialTheme.shapes.small) {
+                    Icon(Icons.Default.Add, contentDescription = null)
+                    Spacer(Modifier.width(Dimens.gapSmall))
+                    Text("Zabilježi uplatu")
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(Modifier.height(Dimens.gap))
 
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-        ) {
-            Column(modifier = Modifier.padding(20.dp)) {
-                Text("Dolasci", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                Text(
-                    "Prisustvovao na ${attendedEvents.size} događaja",
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                if (attendedEvents.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(12.dp))
-                    attendedEvents.take(5).forEach { ev ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 4.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(ev.title, fontSize = 14.sp)
-                            Text(DateUtils.formatIsoDate(ev.date), fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
+        AppCard(modifier = Modifier.fillMaxWidth(), contentPadding = 20.dp) {
+            Text("Dolasci", style = MaterialTheme.typography.titleMedium)
+            Text("Zabilježeno dolazaka: ${attendedEvents.size}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (attendedEvents.isNotEmpty()) {
+                Spacer(Modifier.height(Dimens.gap))
+                attendedEvents.take(5).forEach { ev ->
+                    Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text(ev.title, style = MaterialTheme.typography.bodyMedium)
+                        Text(DateUtils.formatIsoDate(ev.date), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }
         }
 
         if (isAdmin) {
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                OutlinedButton(
-                    onClick = { showEditDialog = true },
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(50.dp),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
+            Spacer(Modifier.height(Dimens.gap))
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Dimens.gap)) {
+                OutlinedButton(onClick = { showEditDialog = true }, modifier = Modifier.weight(1f).height(50.dp), shape = MaterialTheme.shapes.small) {
                     Icon(Icons.Default.Edit, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(Modifier.width(Dimens.gapSmall))
                     Text("Uredi")
                 }
-                Button(
-                    onClick = onDelete,
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(50.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
+                Button(onClick = onDelete, modifier = Modifier.weight(1f).height(50.dp), colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error), shape = MaterialTheme.shapes.small) {
                     Icon(Icons.Default.Delete, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(Modifier.width(Dimens.gapSmall))
                     Text("Obriši")
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(Modifier.height(Dimens.gap))
+        }
     }
 }
 
 @Composable
 private fun InfoRow(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, value: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
+    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.secondary)
-        Spacer(modifier = Modifier.width(16.dp))
+        Spacer(Modifier.width(16.dp))
         Column {
-            Text(label, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(value, fontSize = 16.sp, fontWeight = FontWeight.Medium)
+            Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(value, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
         }
     }
 }

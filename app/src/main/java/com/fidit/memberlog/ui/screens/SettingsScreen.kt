@@ -2,10 +2,8 @@ package com.fidit.memberlog.ui.screens
 
 import android.content.Intent
 import android.widget.Toast
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -19,23 +17,28 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.fidit.memberlog.BuildConfig
 import com.fidit.memberlog.LoginActivity
 import com.fidit.memberlog.ui.FeeViewModel
-import com.fidit.memberlog.ui.theme.DisplayFont
+import com.fidit.memberlog.ui.components.AppCard
+import com.fidit.memberlog.ui.components.ScreenHeader
+import com.fidit.memberlog.ui.components.SectionLabel
+import com.fidit.memberlog.ui.theme.Dimens
 
 @Composable
 fun SettingsScreen(
     isDarkMode: Boolean,
     onThemeChanged: (Boolean) -> Unit,
     isAdmin: Boolean,
+    userName: String,
+    userRole: String,
+    onOpenMyProfile: () -> Unit,
     onManageRoles: () -> Unit,
     onOpenReports: () -> Unit,
-    onNavigateToExchangeRates: () -> Unit, // Dodano kako bi odgovaralo Mainu
+    onNavigateToExchangeRates: () -> Unit,
     feeViewModel: FeeViewModel = viewModel()
 ) {
     val context = LocalContext.current
@@ -51,159 +54,111 @@ fun SettingsScreen(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(24.dp),
-        horizontalAlignment = Alignment.Start
+            .padding(Dimens.screenPadding)
     ) {
-        Text(
-            text = "Postavke",
-            fontFamily = DisplayFont,
-            fontSize = 26.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
-        )
-        Text(
-            text = "Prilagodi izgled i funkcionalnosti",
-            fontSize = 14.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+        ScreenHeader(title = "Postavke", subtitle = "Prilagodi izgled i funkcionalnosti")
+        Spacer(Modifier.height(Dimens.sectionGap))
 
-        Spacer(modifier = Modifier.height(24.dp))
+        SectionLabel("RAČUN")
+        Spacer(Modifier.height(Dimens.gapSmall))
+        SettingsLinkCard("Moj profil", "Moja članarina, događanja i uređivanje profila", onOpenMyProfile)
+        Spacer(Modifier.height(Dimens.gap))
 
-        Text("IZGLED", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
+        SectionLabel("IZGLED")
+        Spacer(Modifier.height(Dimens.gapSmall))
+        AppCard(modifier = Modifier.fillMaxWidth()) {
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                 Column {
-                    Text("Tamni način rada", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                    Text("Uključi ili isključi tamni izgled", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("Tamni način rada", style = MaterialTheme.typography.titleMedium)
+                    Text("Uključi ili isključi tamni izgled", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                Switch(
-                    checked = isDarkMode,
-                    onCheckedChange = { onThemeChanged(it) }
-                )
+                Switch(checked = isDarkMode, onCheckedChange = { onThemeChanged(it) })
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(Modifier.height(Dimens.gap))
 
-        Text("VALUTA I TEČAJ", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp)
-                .clickable { onNavigateToExchangeRates() },
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Column {
-                    Text("Tečajna lista", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                    Text("Pregled tečajeva valuta za klupska dugovanja", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        SectionLabel("VALUTA I TEČAJ")
+        Spacer(Modifier.height(Dimens.gapSmall))
+        AppCard(modifier = Modifier.fillMaxWidth(), onClick = onNavigateToExchangeRates) {
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("Tečajna lista", style = MaterialTheme.typography.titleMedium)
+                    Text("Pregled tečajeva valuta za klupska dugovanja", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                Text("›", fontSize = 22.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("›", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(Modifier.height(Dimens.gap))
 
-        Text("ČLANARINA", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text("Zadani mjesečni iznos", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                Text(
-                    "Primjenjuje se na članove bez posebnog iznosa.",
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-                if (isAdmin) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        OutlinedTextField(
-                            value = feeText,
-                            onValueChange = { feeText = it },
-                            label = { Text("EUR") },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            singleLine = true,
-                            modifier = Modifier.weight(1f)
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Button(
-                            onClick = {
-                                val parsed = feeText.replace(',', '.').toDoubleOrNull()
-                                if (parsed != null && parsed >= 0.0) {
-                                    feeViewModel.setDefaultFee(parsed)
-                                    Toast.makeText(context, "Spremljeno", Toast.LENGTH_SHORT).show()
-                                } else {
-                                    Toast.makeText(context, "Neispravan iznos", Toast.LENGTH_SHORT).show()
-                                }
-                            }
-                        ) { Text("Spremi") }
-                    }
-                } else {
-                    Text("$feeText €", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        SectionLabel("ČLANARINA")
+        Spacer(Modifier.height(Dimens.gapSmall))
+        AppCard(modifier = Modifier.fillMaxWidth()) {
+            Text("Zadani mjesečni iznos", style = MaterialTheme.typography.titleMedium)
+            Text("Primjenjuje se na članove bez posebnog iznosa.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(Modifier.height(Dimens.gap))
+            if (isAdmin) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    OutlinedTextField(
+                        value = feeText,
+                        onValueChange = { feeText = it },
+                        label = { Text("EUR") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        singleLine = true,
+                        shape = MaterialTheme.shapes.small,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Spacer(Modifier.width(Dimens.gap))
+                    Button(
+                        onClick = {
+                            val parsed = feeText.replace(',', '.').toDoubleOrNull()
+                            if (parsed != null && parsed >= 0.0) {
+                                feeViewModel.setDefaultFee(parsed)
+                                Toast.makeText(context, "Spremljeno", Toast.LENGTH_SHORT).show()
+                            } else Toast.makeText(context, "Neispravan iznos", Toast.LENGTH_SHORT).show()
+                        },
+                        shape = MaterialTheme.shapes.small
+                    ) { Text("Spremi") }
                 }
+            } else {
+                Text("$feeText €", style = MaterialTheme.typography.titleLarge)
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(Modifier.height(Dimens.gap))
 
         if (isAdmin) {
-            Text("UPRAVLJANJE", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-            SettingsLinkCard("Uloge", "Dodaj, uredi i oboji uloge članova", onManageRoles)
+            SectionLabel("UPRAVLJANJE")
+            Spacer(Modifier.height(Dimens.gapSmall))
+            SettingsLinkCard("Uloge", "Dodaj i uredi uloge i boje", onManageRoles)
+            Spacer(Modifier.height(Dimens.gapSmall))
             SettingsLinkCard("Izvještaji", "Izvoz u CSV i PDF", onOpenReports)
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(Modifier.height(Dimens.gap))
         }
 
-        Text("INFORMACIJE", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-        ) {
-            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text("Trenutni korisnik", fontWeight = FontWeight.SemiBold)
-                    Text("Admin", color = MaterialTheme.colorScheme.onSurfaceVariant)
+        SectionLabel("INFORMACIJE")
+        Spacer(Modifier.height(Dimens.gapSmall))
+        AppCard(modifier = Modifier.fillMaxWidth()) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text("Trenutni korisnik", style = MaterialTheme.typography.titleSmall)
+                Text(userName.ifBlank { "—" }, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            if (userRole.isNotBlank()) {
+                Spacer(Modifier.height(Dimens.gap))
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text("Uloga", style = MaterialTheme.typography.titleSmall)
+                    Text(userRole, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text("Verzija aplikacije", fontWeight = FontWeight.SemiBold)
-                    Text("1.0.0", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
+            }
+            Spacer(Modifier.height(Dimens.gap))
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text("Verzija aplikacije", style = MaterialTheme.typography.titleSmall)
+                Text(BuildConfig.VERSION_NAME, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(Modifier.height(Dimens.sectionGap))
 
         Button(
             onClick = {
@@ -212,39 +167,24 @@ fun SettingsScreen(
                 context.startActivity(intent)
                 Toast.makeText(context, "Odjava uspješna", Toast.LENGTH_SHORT).show()
             },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(54.dp),
+            modifier = Modifier.fillMaxWidth().height(54.dp),
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            Text("ODJAVI SE", color = Color.White, fontWeight = FontWeight.Bold)
-        }
+            shape = MaterialTheme.shapes.small
+        ) { Text("ODJAVI SE", color = Color.White) }
+
+        Spacer(Modifier.height(Dimens.gap))
     }
 }
 
 @Composable
 private fun SettingsLinkCard(title: String, subtitle: String, onClick: () -> Unit) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp)
-            .clickable { onClick() },
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column {
-                Text(title, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                Text(subtitle, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    AppCard(modifier = Modifier.fillMaxWidth(), onClick = onClick) {
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(title, style = MaterialTheme.typography.titleMedium)
+                Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            Text("›", fontSize = 22.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text("›", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

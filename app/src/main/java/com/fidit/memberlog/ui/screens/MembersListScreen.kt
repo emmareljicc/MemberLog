@@ -1,14 +1,10 @@
 package com.fidit.memberlog.ui.screens
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
@@ -19,24 +15,26 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.fidit.memberlog.model.Member
 import com.fidit.memberlog.model.MembershipStatus
 import com.fidit.memberlog.model.Role
+import com.fidit.memberlog.ui.components.AppCard
 import com.fidit.memberlog.ui.components.MemberAvatar
-import com.fidit.memberlog.ui.theme.DisplayFont
-import com.fidit.memberlog.ui.theme.GreenSuccess
-import com.fidit.memberlog.ui.theme.RedAlert
+import com.fidit.memberlog.ui.components.LoadingSpinner
+import com.fidit.memberlog.ui.components.RoleChip
+import com.fidit.memberlog.ui.components.ScreenHeader
+import com.fidit.memberlog.ui.components.StatusPill
+import com.fidit.memberlog.ui.theme.Dimens
+import com.fidit.memberlog.ui.theme.paidColor
+import com.fidit.memberlog.ui.theme.unpaidColor
 import com.fidit.memberlog.util.roleColor
 
 @Composable
 fun MembersListScreen(
-    members: List<Member>,
-    owedByMember: Map<Int, Double>,
+    members: List<Member>?,
+    owedByMember: Map<Int, Double>?,
     rolesById: Map<Int, Role>,
     onMemberClick: (Member) -> Unit
 ) {
@@ -46,31 +44,20 @@ fun MembersListScreen(
     var owingOnly by remember { mutableStateOf(false) }
 
     val roleList = rolesById.values.sortedBy { it.name }
-    val filtered = members.filter { m ->
+    val filtered = members.orEmpty().filter { m ->
         (query.isBlank() || m.name.foldCro().contains(query.foldCro())) &&
             (roleFilter == null || m.roleId == roleFilter) &&
             (statusFilter == null || m.status == statusFilter!!.name) &&
-            (!owingOnly || (owedByMember[m.id] ?: 0.0) > 0.0)
+            (!owingOnly || (owedByMember.orEmpty()[m.id] ?: 0.0) > 0.0)
     }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .padding(Dimens.screenPadding)
     ) {
-        Text(
-            text = "Popis članova",
-            fontFamily = DisplayFont,
-            fontSize = 26.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
-        )
-        Text(
-            text = "Klikni na člana za detaljniji pregled",
-            fontSize = 14.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Spacer(modifier = Modifier.height(16.dp))
+        ScreenHeader(title = "Popis članova", subtitle = "Klikni na člana za detaljniji pregled")
+        Spacer(Modifier.height(Dimens.gap))
 
         OutlinedTextField(
             value = query,
@@ -78,22 +65,19 @@ fun MembersListScreen(
             label = { Text("Pretraži članove") },
             leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
             singleLine = true,
+            shape = MaterialTheme.shapes.medium,
             modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(Modifier.height(Dimens.gap))
 
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .horizontalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(Dimens.gapSmall)
         ) {
-            FilterChip(
-                selected = owingOnly,
-                onClick = { owingOnly = !owingOnly },
-                label = { Text("Duguje") }
-            )
+            FilterChip(selected = owingOnly, onClick = { owingOnly = !owingOnly }, label = { Text("Duguje") })
             MembershipStatus.entries.forEach { s ->
                 FilterChip(
                     selected = statusFilter == s,
@@ -110,68 +94,37 @@ fun MembersListScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(Modifier.height(Dimens.gap))
 
-        if (filtered.isEmpty()) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        when {
+            members == null || owedByMember == null -> LoadingSpinner()
+            filtered.isEmpty() -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text(
                     "Nema članova koji odgovaraju filtrima.",
-                    fontSize = 14.sp,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            return@Column
-        }
-
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            items(filtered) { member ->
-                val role = rolesById[member.roleId]
-                val avatarColor = role?.let { roleColor(it.colorHex) } ?: MaterialTheme.colorScheme.primary
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onMemberClick(member) },
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        MemberAvatar(
-                            name = member.name,
-                            photoPath = member.photoPath,
-                            color = avatarColor,
-                            size = 48.dp
-                        )
-
-                        Spacer(modifier = Modifier.width(16.dp))
-
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = member.name,
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                RoleChip(name = role?.name ?: "—", color = avatarColor)
-                                val owed = owedByMember[member.id] ?: 0.0
-                                val owing = owed > 0.0
-                                Badge(
-                                    containerColor = if (owing) RedAlert else GreenSuccess
-                                ) {
-                                    Text(
-                                        if (owing) "Duguje ${money(owed)}" else "Podmireno",
-                                        color = Color.White,
-                                        modifier = Modifier.padding(horizontal = 4.dp),
-                                        fontSize = 10.sp
-                                    )
+            else -> LazyColumn(verticalArrangement = Arrangement.spacedBy(Dimens.gap)) {
+                items(filtered) { member ->
+                    val role = rolesById[member.roleId]
+                    val avatarColor = role?.let { roleColor(it.colorHex) } ?: MaterialTheme.colorScheme.primary
+                    AppCard(modifier = Modifier.fillMaxWidth(), onClick = { onMemberClick(member) }, contentPadding = 16.dp) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            MemberAvatar(name = member.name, photoPath = member.photoPath, color = avatarColor, size = Dimens.avatarSmall)
+                            Spacer(Modifier.width(16.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    member.name,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Spacer(Modifier.height(6.dp))
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Dimens.gapSmall)) {
+                                    RoleChip(name = role?.name ?: "Bez uloge", color = avatarColor)
+                                    val owed = owedByMember.orEmpty()[member.id] ?: 0.0
+                                    if (owed > 0.0) StatusPill("Duguje ${money(owed)}", unpaidColor())
+                                    else StatusPill("Podmireno", paidColor())
                                 }
                             }
                         }
@@ -179,26 +132,6 @@ fun MembersListScreen(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun RoleChip(name: String, color: Color) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .clip(RoundedCornerShape(8.dp))
-            .background(color.copy(alpha = 0.15f))
-            .padding(horizontal = 8.dp, vertical = 4.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .size(8.dp)
-                .clip(CircleShape)
-                .background(color)
-        )
-        Spacer(modifier = Modifier.width(6.dp))
-        Text(name, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface)
     }
 }
 

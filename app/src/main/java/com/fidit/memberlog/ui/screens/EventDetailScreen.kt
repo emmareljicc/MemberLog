@@ -3,14 +3,10 @@ package com.fidit.memberlog.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -26,13 +22,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fidit.memberlog.model.Member
 import com.fidit.memberlog.model.Role
 import com.fidit.memberlog.ui.ActivitiesViewModel
+import com.fidit.memberlog.ui.components.AppCard
+import com.fidit.memberlog.ui.components.LoadingSpinner
+import com.fidit.memberlog.ui.components.MemberAvatar
+import com.fidit.memberlog.ui.components.ScreenHeader
+import com.fidit.memberlog.ui.theme.Dimens
 import com.fidit.memberlog.util.DateUtils
 import com.fidit.memberlog.util.roleColor
 
@@ -46,169 +45,112 @@ fun EventDetailScreen(
     viewModel: ActivitiesViewModel = viewModel()
 ) {
     val events by viewModel.events.collectAsState()
-    val event = events.firstOrNull { it.id == eventId }
-    val attendeeIds by viewModel.attendeeIds(eventId).collectAsState(initial = emptyList())
-    val rsvpIds by viewModel.rsvpMemberIds(eventId).collectAsState(initial = emptyList())
+    val event = events.orEmpty().firstOrNull { it.id == eventId }
+    val attendeeState by viewModel.attendeeIds(eventId).collectAsState(initial = null)
+    val rsvpState by viewModel.rsvpMemberIds(eventId).collectAsState(initial = null)
     var showEdit by remember { mutableStateOf(false) }
 
     if (event == null) {
-        Box(Modifier.fillMaxSize()) {}
+        LoadingSpinner()
         return
     }
 
     if (showEdit) {
-        EventFormDialog(
-            title = "Uredi događaj",
+        EventFormScreen(
+            title = "Uredi događanje",
             existing = event,
-            onDismiss = { showEdit = false },
+            onBack = { showEdit = false },
             onSubmit = { t, d, l, n ->
                 viewModel.updateEvent(event.copy(title = t, date = d, location = l, notes = n))
                 showEdit = false
             }
         )
+        return
+    }
+
+    val attendeeIds = attendeeState
+    val rsvpIds = rsvpState
+    if (attendeeIds == null || rsvpIds == null) {
+        LoadingSpinner()
+        return
     }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(16.dp)
+            .padding(Dimens.screenPadding)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { onBack() },
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Natrag", tint = MaterialTheme.colorScheme.primary)
-            Spacer(Modifier.width(8.dp))
-            Text("Natrag", color = MaterialTheme.colorScheme.primary, fontSize = 16.sp)
-        }
+        ScreenHeader(title = "Detalji događanja", onBack = onBack)
+        Spacer(Modifier.height(Dimens.gap))
 
-        Spacer(Modifier.height(16.dp))
-
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-        ) {
-            Column(Modifier.padding(20.dp)) {
-                Text(event.title, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.height(12.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.CalendarMonth, contentDescription = null, tint = MaterialTheme.colorScheme.secondary)
-                    Spacer(Modifier.width(8.dp))
-                    Text(DateUtils.formatIsoDate(event.date), fontSize = 15.sp)
-                }
-                Spacer(Modifier.height(8.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Place, contentDescription = null, tint = MaterialTheme.colorScheme.secondary)
-                    Spacer(Modifier.width(8.dp))
-                    Text(event.location, fontSize = 15.sp)
-                }
-                if (event.notes.isNotBlank()) {
-                    Spacer(Modifier.height(8.dp))
-                    Text(event.notes, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
+        AppCard(modifier = Modifier.fillMaxWidth(), contentPadding = 20.dp) {
+            Text(event.title, style = MaterialTheme.typography.titleLarge)
+            Spacer(Modifier.height(Dimens.gap))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.CalendarMonth, contentDescription = null, tint = MaterialTheme.colorScheme.secondary)
+                Spacer(Modifier.width(Dimens.gapSmall))
+                Text(DateUtils.formatIsoDate(event.date), style = MaterialTheme.typography.bodyLarge)
+            }
+            Spacer(Modifier.height(Dimens.gapSmall))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.Place, contentDescription = null, tint = MaterialTheme.colorScheme.secondary)
+                Spacer(Modifier.width(Dimens.gapSmall))
+                Text(event.location, style = MaterialTheme.typography.bodyLarge)
+            }
+            if (event.notes.isNotBlank()) {
+                Spacer(Modifier.height(Dimens.gapSmall))
+                Text(event.notes, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
 
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(Dimens.gap))
 
         if (isAdmin) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                OutlinedButton(
-                    onClick = { showEdit = true },
-                    modifier = Modifier.weight(1f).height(50.dp),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Dimens.gap)) {
+                OutlinedButton(onClick = { showEdit = true }, modifier = Modifier.weight(1f).height(50.dp), shape = MaterialTheme.shapes.small) {
                     Icon(Icons.Default.Edit, contentDescription = null)
-                    Spacer(Modifier.width(8.dp))
+                    Spacer(Modifier.width(Dimens.gapSmall))
                     Text("Uredi")
                 }
-                Button(
-                    onClick = { viewModel.deleteEvent(event); onBack() },
-                    modifier = Modifier.weight(1f).height(50.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
+                Button(onClick = { viewModel.deleteEvent(event); onBack() }, modifier = Modifier.weight(1f).height(50.dp), colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error), shape = MaterialTheme.shapes.small) {
                     Icon(Icons.Default.Delete, contentDescription = null)
-                    Spacer(Modifier.width(8.dp))
+                    Spacer(Modifier.width(Dimens.gapSmall))
                     Text("Obriši")
                 }
             }
-
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(Dimens.gap))
         }
 
-        Text(
-            "Dolasci (${attendeeIds.size}/${members.size})",
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold
-        )
+        Text("Dolasci (${attendeeIds.size}/${members.size})", style = MaterialTheme.typography.titleMedium)
         if (rsvpIds.isNotEmpty()) {
-            Text(
-                "Najavili dolazak: ${rsvpIds.size}",
-                fontSize = 12.sp,
-                color = MaterialTheme.colorScheme.primary
-            )
+            Text("Najavili dolazak: ${rsvpIds.size}", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
         }
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(Dimens.gapSmall))
 
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(max = 400.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            items(members) { member ->
+        Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            members.forEach { member ->
                 val present = attendeeIds.contains(member.id)
                 val accent = rolesById[member.roleId]?.let { roleColor(it.colorHex) } ?: MaterialTheme.colorScheme.primary
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
+                        .clip(MaterialTheme.shapes.small)
                         .then(if (isAdmin) Modifier.clickable { viewModel.setAttendance(eventId, member.id, !present) } else Modifier)
                         .padding(vertical = 6.dp, horizontal = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(32.dp)
-                            .clip(CircleShape)
-                            .background(accent),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(initials(member.name), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                    }
-                    Spacer(Modifier.width(12.dp))
-                    Text(member.name, fontSize = 15.sp, modifier = Modifier.weight(1f))
+                    MemberAvatar(name = member.name, photoPath = member.photoPath, color = accent, size = 32.dp, fontSize = MaterialTheme.typography.labelMedium.fontSize)
+                    Spacer(Modifier.width(Dimens.gap))
+                    Text(member.name, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
                     if (rsvpIds.contains(member.id)) {
-                        Text(
-                            "najavio",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(end = 8.dp)
-                        )
+                        Text("najava", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(end = Dimens.gapSmall))
                     }
-                    Checkbox(
-                        checked = present,
-                        enabled = isAdmin,
-                        onCheckedChange = { viewModel.setAttendance(eventId, member.id, it) }
-                    )
+                    Checkbox(checked = present, enabled = isAdmin, onCheckedChange = { viewModel.setAttendance(eventId, member.id, it) })
                 }
             }
         }
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(Dimens.gap))
     }
-}
-
-private fun initials(name: String): String {
-    val parts = name.split(" ")
-    return if (parts.size > 1) "${parts[0][0]}${parts[1][0]}" else name.take(1)
 }

@@ -19,6 +19,7 @@ import com.fidit.memberlog.ui.theme.DisplayFont
 @Composable
 fun LoginScreen(
     onLoginSuccess: (memberId: Int, isAdmin: Boolean) -> Unit,
+    onRegister: () -> Unit,
     authViewModel: AuthViewModel = viewModel()
 ) {
     val context = LocalContext.current
@@ -88,7 +89,7 @@ fun LoginScreen(
                         else Toast.makeText(context, "Neispravni podaci za prijavu", Toast.LENGTH_SHORT).show()
                     }
                 } else {
-                    Toast.makeText(context, "Unesite e-mail i lozinku", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Unesi e-mail i lozinku", Toast.LENGTH_SHORT).show()
                 }
             },
             modifier = Modifier
@@ -99,5 +100,12 @@ fun LoginScreen(
         ) {
             Text("PRIJAVI SE", fontWeight = FontWeight.Bold)
         }
+
+        TextButton(onClick = onRegister, modifier = Modifier.padding(top = 4.dp)) {
+            Text("Nemaš račun? Registriraj se")
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+        DevLoginButtons(authViewModel = authViewModel, onLoginSuccess = onLoginSuccess)
     }
 }

@@ -1,14 +1,9 @@
 package com.fidit.memberlog.ui.components
 
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -29,10 +24,6 @@ fun ProgressRing(
     strokeWidth: Dp = 14.dp,
     content: @Composable () -> Unit = {}
 ) {
-    val sweep = remember { Animatable(0f) }
-    LaunchedEffect(fraction) {
-        sweep.animateTo(fraction.coerceIn(0f, 1f), animationSpec = tween(900, easing = FastOutSlowInEasing))
-    }
     Box(modifier = modifier.size(diameter), contentAlignment = Alignment.Center) {
         Canvas(modifier = Modifier.size(diameter)) {
             val stroke = strokeWidth.toPx()
@@ -50,7 +41,7 @@ fun ProgressRing(
             drawArc(
                 color = ringColor,
                 startAngle = -90f,
-                sweepAngle = 360f * sweep.value,
+                sweepAngle = 360f * fraction.coerceIn(0f, 1f),
                 useCenter = false,
                 topLeft = topLeft,
                 size = arcSize,

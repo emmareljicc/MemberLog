@@ -25,14 +25,14 @@ class MembersViewModel(app: Application) : AndroidViewModel(app) {
     private val repository = MemberRepository(db.memberDao())
     private val feeRepository = FeeRepository(db.feeDao())
 
-    val members: StateFlow<List<Member>> = repository.allMembers
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    val members: StateFlow<List<Member>?> = repository.allMembers
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     val rolesById: StateFlow<Map<Int, Role>> = db.roleDao().getAll()
         .map { roles -> roles.associateBy { it.id } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
-    val owedByMember: StateFlow<Map<Int, Double>> = combine(
+    val owedByMember: StateFlow<Map<Int, Double>?> = combine(
         repository.allMembers,
         feeRepository.allPayments,
         feeRepository.config
@@ -47,7 +47,7 @@ class MembersViewModel(app: Application) : AndroidViewModel(app) {
             )
             m.id to FeeCalculator.totalOwed(statuses)
         }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     fun addMember(
         name: String,

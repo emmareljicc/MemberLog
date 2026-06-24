@@ -29,11 +29,23 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     if (isAdmin) {
-                        MainScreen(
-                            isDarkMode = isDarkMode,
-                            onThemeChanged = { isDarkMode = it },
-                            isAdmin = true
-                        )
+                        var showMyProfile by remember { mutableStateOf(false) }
+                        if (showMyProfile) {
+                            MemberScreen(
+                                memberId = memberId,
+                                isDarkMode = isDarkMode,
+                                onThemeChanged = { isDarkMode = it },
+                                onExit = { showMyProfile = false }
+                            )
+                        } else {
+                            MainScreen(
+                                isDarkMode = isDarkMode,
+                                onThemeChanged = { isDarkMode = it },
+                                isAdmin = true,
+                                memberId = memberId,
+                                onOpenMyProfile = { showMyProfile = true }
+                            )
+                        }
                     } else {
                         MemberScreen(
                             memberId = memberId,
