@@ -77,13 +77,13 @@ fun MemberLogBottomBar(
                 forceMoveTo = false
             )
             lineTo(w - c, 0f)
-            quadraticBezierTo(w, 0f, w, c)
+            quadraticTo(w, 0f, w, c)
             lineTo(w, h - c)
-            quadraticBezierTo(w, h, w - c, h)
+            quadraticTo(w, h, w - c, h)
             lineTo(c, h)
-            quadraticBezierTo(0f, h, 0f, h - c)
+            quadraticTo(0f, h, 0f, h - c)
             lineTo(0f, c)
-            quadraticBezierTo(0f, 0f, c, 0f)
+            quadraticTo(0f, 0f, c, 0f)
             close()
         }
     }

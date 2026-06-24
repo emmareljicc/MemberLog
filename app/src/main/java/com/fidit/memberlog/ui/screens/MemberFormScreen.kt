@@ -173,7 +173,7 @@ fun MemberFormScreen(
                         value = selectedRole?.name ?: "", onValueChange = {}, readOnly = true,
                         label = { Text("Uloga") },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = roleMenuExpanded) },
-                        modifier = Modifier.fillMaxWidth().menuAnchor(MenuAnchorType.PrimaryNotEditable)
+                        modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
                     )
                     ExposedDropdownMenu(expanded = roleMenuExpanded, onDismissRequest = { roleMenuExpanded = false }) {
                         roles.forEach { role ->
@@ -195,7 +195,7 @@ fun MemberFormScreen(
                         value = status.label, onValueChange = {}, readOnly = true,
                         label = { Text("Status članstva") },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = statusMenuExpanded) },
-                        modifier = Modifier.fillMaxWidth().menuAnchor(MenuAnchorType.PrimaryNotEditable)
+                        modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
                     )
                     ExposedDropdownMenu(expanded = statusMenuExpanded, onDismissRequest = { statusMenuExpanded = false }) {
                         MembershipStatus.entries.forEach { s ->
@@ -275,7 +275,7 @@ private fun copyToInternal(context: Context, uri: Uri): String? {
             file.outputStream().use { output -> input.copyTo(output) }
         }
         file.absolutePath
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         null
     }
 }

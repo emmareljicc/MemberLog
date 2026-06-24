@@ -13,7 +13,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fidit.memberlog.ui.ActivitiesViewModel
-import com.fidit.memberlog.ui.DashboardViewModel
 import com.fidit.memberlog.ui.MembersViewModel
 import com.fidit.memberlog.ui.RolesViewModel
 import com.fidit.memberlog.ui.components.AddActionSheet
@@ -28,8 +27,6 @@ fun MainScreen(
     isAdmin: Boolean,
     memberId: Int,
     onOpenMyProfile: () -> Unit,
-    onNavigateToExchangeRates: () -> Unit,
-    dashboardViewModel: DashboardViewModel = viewModel(),
     viewModel: MembersViewModel = viewModel(),
     activitiesViewModel: ActivitiesViewModel = viewModel(),
     rolesViewModel: RolesViewModel = viewModel()
@@ -58,7 +55,6 @@ fun MainScreen(
     val rolesById by viewModel.rolesById.collectAsState()
     val events by activitiesViewModel.events.collectAsState()
     val roles = rolesById.values.sortedBy { it.name }
-    val selectedMember = members?.find { it.id == selectedMemberId }
     val currentUser = members?.find { it.id == memberId }
     val currentUserName = currentUser?.name ?: ""
     val currentUserRole = currentUser?.let { rolesById[it.roleId]?.name } ?: ""
@@ -123,30 +119,26 @@ fun MainScreen(
                 showRoles -> RolesScreen(isAdmin = isAdmin, onBack = { showRoles = false })
                 showReports -> ReportsScreen(onBack = { showReports = false })
                 selectedTab == 0 -> DashboardScreen(
-                    rolesById = rolesById,
-                    onMemberClick = { id ->
-                        selectedMemberId = id
-                        selectedTab = 1
-                    }
+                    rolesById = rolesById
                 )
                 selectedTab == 1 -> run {
-                    val m = selectedMember
-                    if (m == null) {
+                    val selectedMember = members?.find { it.id == selectedMemberId }
+                    if (selectedMember == null) {
                         MembersListScreen(
                             members = members,
                             owedByMember = owedByMember,
                             rolesById = rolesById,
-                            onMemberClick = { selectedMemberId = it.id }
+                            onMemberClick = { clickedMember -> selectedMemberId = clickedMember.id }
                         )
                     } else {
                         MemberDetailsScreen(
-                            member = m,
+                            member = selectedMember,
                             roles = roles,
                             isAdmin = isAdmin,
                             onBack = { selectedMemberId = null },
-                            onUpdate = { viewModel.updateMember(it) },
+                            onUpdate = { updatedMember -> viewModel.updateMember(updatedMember) },
                             onDelete = {
-                                viewModel.deleteMember(m)
+                                viewModel.deleteMember(selectedMember)
                                 selectedMemberId = null
                             }
                         )

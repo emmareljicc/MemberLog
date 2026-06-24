@@ -64,8 +64,7 @@ class MainActivity : ComponentActivity() {
                                     onThemeChanged = { isDarkMode = it },
                                     isAdmin = true,
                                     memberId = memberId,
-                                    onOpenMyProfile = { showMyProfile = true },
-                                    onNavigateToExchangeRates = { currentScreen = "exchange_rates" }
+                                    onOpenMyProfile = { showMyProfile = true }
                                 )
                             }
                         } else {
