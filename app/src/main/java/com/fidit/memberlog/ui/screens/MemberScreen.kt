@@ -32,6 +32,7 @@ import com.fidit.memberlog.ui.components.BackButton
 import com.fidit.memberlog.ui.components.LoadingSpinner
 import com.fidit.memberlog.ui.theme.Dimens
 import com.fidit.memberlog.util.DateUtils
+import com.fidit.memberlog.util.FeeCalculator
 
 @Composable
 fun MemberScreen(
@@ -47,11 +48,13 @@ fun MemberScreen(
     var selectedTab by remember { mutableIntStateOf(0) }
     val member by sessionViewModel.member(memberId).collectAsState(initial = null)
     val feeConfig by feeViewModel.config.collectAsState()
+    val rates by feeViewModel.rates.collectAsState()
+    val payments by feeViewModel.paymentsFor(memberId).collectAsState(initial = emptyList())
 
     val destinations = listOf(
         BottomDest(Icons.Outlined.Home, "Početna"),
-        BottomDest(Icons.Outlined.Event, "Događanja"),
         BottomDest(Icons.Default.Payments, "Plaćanje"),
+        BottomDest(Icons.Outlined.Event, "Događanja"),
         BottomDest(Icons.Outlined.Person, "Profil")
     )
 
@@ -88,20 +91,27 @@ fun MemberScreen(
                 LoadingSpinner()
             } else {
                 when (selectedTab) {
-                    0 -> MemberHomeScreen(m, feeViewModel, activitiesViewModel)
-                    1 -> MemberEventsScreen(m, activitiesViewModel)
-                    2 -> {
-                        val amountToPay = m.monthlyFeeOverride ?: feeConfig.defaultMonthlyFee
+                    0 -> MemberHomeScreen(m, feeViewModel, activitiesViewModel, onOpenEvents = { selectedTab = 2 })
+                    1 -> {
+                        val statuses = FeeCalculator.computeStatuses(
+                            m.joinDate,
+                            { p -> FeeCalculator.effectiveFee(m.id, p, rates, feeConfig.defaultMonthlyFee) },
+                            payments
+                        )
+                        val target = FeeCalculator.oldestOutstanding(statuses)
+                        val targetPeriod = target?.period ?: DateUtils.currentYearMonth()
+                        val amountToPay = target?.let { (it.expected - it.paid).coerceAtLeast(0.0) }
+                            ?: FeeCalculator.effectiveFee(m.id, targetPeriod, rates, feeConfig.defaultMonthlyFee)
 
-                        key(amountToPay, selectedTab) {
+                        key(targetPeriod, amountToPay, selectedTab) {
                             RecordPaymentScreen(
-                                period = DateUtils.todayIso(),
+                                period = targetPeriod,
                                 expectedAmount = amountToPay,
                                 onBack = { selectedTab = 0 },
                                 onConfirm = { amount, paidDateIso ->
                                     feeViewModel.recordPayment(
                                         memberId = memberId,
-                                        period = paidDateIso.dropLast(3), // Osigurava ispravan format mjeseca (GGGG-MM) prema Room bazi
+                                        period = targetPeriod,
                                         amount = amount,
                                         paidDateIso = paidDateIso
                                     )
@@ -110,6 +120,7 @@ fun MemberScreen(
                             )
                         }
                     }
+                    2 -> MemberEventsScreen(m, activitiesViewModel)
                     else -> MemberProfileScreen(
                         member = m,
                         isDarkMode = isDarkMode,

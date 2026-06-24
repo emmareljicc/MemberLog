@@ -95,7 +95,7 @@ fun SettingsScreen(
                             val parsed = feeText.replace(',', '.').toDoubleOrNull()
                             if (parsed != null && parsed >= 0.0) {
                                 feeViewModel.setDefaultFee(parsed)
-                                Toast.makeText(context, "Spremljeno", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "Spremljeno, vrijedi od idućeg mjeseca", Toast.LENGTH_SHORT).show()
                             } else Toast.makeText(context, "Neispravan iznos", Toast.LENGTH_SHORT).show()
                         },
                         shape = MaterialTheme.shapes.small

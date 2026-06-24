@@ -26,15 +26,18 @@ import com.fidit.memberlog.ui.theme.paidColor
 import com.fidit.memberlog.ui.theme.unpaidColor
 import com.fidit.memberlog.util.DateUtils
 import com.fidit.memberlog.util.FeeCalculator
+import com.fidit.memberlog.util.Format
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MemberHomeScreen(
     member: Member,
     feeViewModel: FeeViewModel,
-    activitiesViewModel: ActivitiesViewModel
+    activitiesViewModel: ActivitiesViewModel,
+    onOpenEvents: () -> Unit
 ) {
     val config by feeViewModel.config.collectAsState()
+    val rates by feeViewModel.rates.collectAsState()
     val payments by feeViewModel.paymentsFor(member.id).collectAsState(initial = null)
     val events by activitiesViewModel.events.collectAsState()
     val rsvpIds by activitiesViewModel.rsvpEventIds(member.id).collectAsState(initial = emptyList())
@@ -48,8 +51,14 @@ fun MemberHomeScreen(
         return
     }
 
-    val fee = FeeCalculator.monthlyFeeFor(member.monthlyFeeOverride, config.defaultMonthlyFee)
-    val statuses = FeeCalculator.computeStatuses(member.joinDate, fee, paymentList)
+    val currentMonth = DateUtils.currentYearMonth()
+    val fee = FeeCalculator.effectiveFee(member.id, currentMonth, rates, config.defaultMonthlyFee)
+    val isSpecialFee = FeeCalculator.isOverridden(member.id, currentMonth, rates)
+    val statuses = FeeCalculator.computeStatuses(
+        member.joinDate,
+        { p -> FeeCalculator.effectiveFee(member.id, p, rates, config.defaultMonthlyFee) },
+        paymentList
+    )
     val owed = FeeCalculator.totalOwed(statuses)
     val owedMonths = FeeCalculator.owedMonthsCount(statuses)
     val owing = owed > 0.0
@@ -71,7 +80,7 @@ fun MemberHomeScreen(
         HeroCard(modifier = Modifier.fillMaxWidth(), contentPadding = 20.dp) {
             SectionLabel("MOJA ČLANARINA")
             Text(
-                "Mjesečni iznos: ${money(fee)}" + if (member.monthlyFeeOverride != null) " (poseban)" else "",
+                "Mjesečni iznos: ${money(fee)}" + if (isSpecialFee) " (poseban)" else "",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -91,7 +100,7 @@ fun MemberHomeScreen(
 
         Spacer(Modifier.height(Dimens.gap))
 
-        AppCard(modifier = Modifier.fillMaxWidth()) {
+        AppCard(modifier = Modifier.fillMaxWidth(), onClick = onOpenEvents) {
             SectionLabel("NADOLAZEĆE DOGAĐANJE")
             Spacer(Modifier.height(Dimens.gapSmall))
             if (nextEvent == null) {
@@ -126,5 +135,4 @@ fun MemberHomeScreen(
     }
 }
 
-private fun money(v: Double): String =
-    (if (v % 1.0 == 0.0) v.toInt().toString() else "%.2f".format(v)) + " €"
+private fun money(v: Double): String = Format.eur(v)

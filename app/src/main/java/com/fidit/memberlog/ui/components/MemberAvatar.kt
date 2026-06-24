@@ -35,8 +35,9 @@ fun MemberAvatar(
         contentAlignment = Alignment.Center
     ) {
         if (photoPath != null) {
+            val model: Any = if (photoPath.startsWith("file:///android_asset/")) photoPath else File(photoPath)
             AsyncImage(
-                model = File(photoPath),
+                model = model,
                 contentDescription = name,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.size(size).clip(CircleShape)

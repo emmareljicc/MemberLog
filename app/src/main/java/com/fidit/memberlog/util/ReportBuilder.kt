@@ -3,6 +3,7 @@ package com.fidit.memberlog.util
 import com.fidit.memberlog.model.Attendance
 import com.fidit.memberlog.model.Event
 import com.fidit.memberlog.model.FeePayment
+import com.fidit.memberlog.model.FeeRate
 import com.fidit.memberlog.model.Member
 import com.fidit.memberlog.model.Role
 import java.time.LocalDate
@@ -53,14 +54,19 @@ object ReportBuilder {
         events: List<Event>,
         attendance: List<Attendance>,
         defaultMonthlyFee: Double,
+        rates: List<FeeRate> = emptyList(),
         now: YearMonth = YearMonth.now(),
         today: String = LocalDate.now().toString()
     ): ReportData {
         val paymentsByMember = payments.groupBy { it.memberId }
         val memberRows = members.map { m ->
-            val fee = FeeCalculator.monthlyFeeFor(m.monthlyFeeOverride, defaultMonthlyFee)
             val owed = FeeCalculator.totalOwed(
-                FeeCalculator.computeStatuses(m.joinDate, fee, paymentsByMember[m.id] ?: emptyList(), now)
+                FeeCalculator.computeStatuses(
+                    m.joinDate,
+                    { p -> FeeCalculator.effectiveFee(m.id, p, rates, defaultMonthlyFee) },
+                    paymentsByMember[m.id] ?: emptyList(),
+                    now
+                )
             )
             MemberRow(
                 name = m.name,
@@ -89,7 +95,7 @@ object ReportBuilder {
             .sortedByDescending { it.date }
             .map { e -> EventRow(e.title, e.date, attendeesByEvent[e.id] ?: 0) }
 
-        val stats = DashboardCalculator.compute(members, payments, defaultMonthlyFee, events, today, now)
+        val stats = DashboardCalculator.compute(members, payments, defaultMonthlyFee, rates, events, today, now)
         val totals = ReportTotals(
             members = stats.totalMembers,
             collected = stats.collectedTotal,
@@ -138,8 +144,7 @@ object ReportBuilder {
         return sb.toString()
     }
 
-    private fun money(v: Double): String =
-        if (v % 1.0 == 0.0) v.toInt().toString() else "%.2f".format(v)
+    private fun money(v: Double): String = Format.money(v)
 
     private fun csvCell(value: String): String {
         return if (value.contains(',') || value.contains('"') || value.contains('\n')) {

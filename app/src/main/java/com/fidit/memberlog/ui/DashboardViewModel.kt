@@ -21,12 +21,14 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
         db.memberDao().getAll(),
         db.feeDao().allPayments(),
         db.feeDao().getConfig(),
-        db.activityDao().allEvents()
-    ) { members, payments, config, events ->
+        db.activityDao().allEvents(),
+        db.feeDao().allRates()
+    ) { members, payments, config, events, rates ->
         DashboardCalculator.compute(
             members = members,
             payments = payments,
             defaultMonthlyFee = (config ?: FeeConfig()).defaultMonthlyFee,
+            rates = rates,
             events = events,
             today = LocalDate.now().toString()
         )

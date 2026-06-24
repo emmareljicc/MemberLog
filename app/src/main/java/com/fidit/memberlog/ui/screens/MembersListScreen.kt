@@ -41,6 +41,7 @@ import com.fidit.memberlog.ui.components.StatusPill
 import com.fidit.memberlog.ui.theme.Dimens
 import com.fidit.memberlog.ui.theme.paidColor
 import com.fidit.memberlog.ui.theme.unpaidColor
+import com.fidit.memberlog.util.Format
 import com.fidit.memberlog.util.roleColor
 
 @Composable
@@ -152,5 +153,4 @@ private fun String.foldCro(): String =
         .replace(Regex("\\p{Mn}+"), "")
         .lowercase()
 
-private fun money(v: Double): String =
-    (if (v % 1.0 == 0.0) v.toInt().toString() else "%.2f".format(v)) + " €"
+private fun money(v: Double): String = Format.eur(v)

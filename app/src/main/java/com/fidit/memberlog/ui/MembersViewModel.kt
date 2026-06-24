@@ -12,6 +12,7 @@ import com.fidit.memberlog.model.Role
 import com.fidit.memberlog.util.DateUtils
 import com.fidit.memberlog.util.FeeCalculator
 import com.fidit.memberlog.util.PasswordHash
+import java.time.YearMonth
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -35,14 +36,14 @@ class MembersViewModel(app: Application) : AndroidViewModel(app) {
     val owedByMember: StateFlow<Map<Int, Double>?> = combine(
         repository.allMembers,
         feeRepository.allPayments,
-        feeRepository.config
-    ) { members, payments, config ->
+        feeRepository.config,
+        feeRepository.allRates
+    ) { members, payments, config, rates ->
         val cfg = config ?: FeeConfig()
         members.associate { m ->
-            val fee = FeeCalculator.monthlyFeeFor(m.monthlyFeeOverride, cfg.defaultMonthlyFee)
             val statuses = FeeCalculator.computeStatuses(
                 joinIso = m.joinDate,
-                monthlyFee = fee,
+                feeForPeriod = { p -> FeeCalculator.effectiveFee(m.id, p, rates, cfg.defaultMonthlyFee) },
                 payments = payments.filter { it.memberId == m.id }
             )
             m.id to FeeCalculator.totalOwed(statuses)
@@ -62,11 +63,12 @@ class MembersViewModel(app: Application) : AndroidViewModel(app) {
         password: String?
     ) {
         viewModelScope.launch {
-            repository.insert(
+            val joinIso = DateUtils.todayIso()
+            val id = repository.insert(
                 Member(
                     name = name,
                     roleId = roleId,
-                    joinDate = DateUtils.todayIso(),
+                    joinDate = joinIso,
                     email = email,
                     phone = phone,
                     monthlyFeeOverride = monthlyFeeOverride,
@@ -77,11 +79,25 @@ class MembersViewModel(app: Application) : AndroidViewModel(app) {
                     passwordHash = password?.let { PasswordHash.sha256(it) }
                 )
             )
+            if (monthlyFeeOverride != null) {
+                feeRepository.addMemberRate(id.toInt(), joinIso.dropLast(3), monthlyFeeOverride)
+            }
         }
     }
 
     fun updateMember(member: Member) {
-        viewModelScope.launch { repository.update(member) }
+        viewModelScope.launch {
+            val old = members.value?.find { it.id == member.id }
+            repository.update(member)
+            if (old == null || old.monthlyFeeOverride != member.monthlyFeeOverride) {
+                feeRepository.addMemberRate(member.id, nextMonth(), member.monthlyFeeOverride)
+            }
+        }
+    }
+
+    private fun nextMonth(): String {
+        val ym = YearMonth.now().plusMonths(1)
+        return "%04d-%02d".format(ym.year, ym.monthValue)
     }
 
     fun deleteMember(member: Member) {

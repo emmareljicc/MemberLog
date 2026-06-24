@@ -47,6 +47,7 @@ import com.fidit.memberlog.ui.components.ScreenHeader
 import com.fidit.memberlog.ui.components.SectionLabel
 import com.fidit.memberlog.ui.theme.Dimens
 import com.fidit.memberlog.util.DateUtils
+import com.fidit.memberlog.util.Format
 import com.fidit.memberlog.util.PdfReport
 import com.fidit.memberlog.util.ReportBuilder
 import java.io.File
@@ -201,8 +202,7 @@ private fun ExportRow(icon: ImageVector, title: String, subtitle: String, onClic
     }
 }
 
-private fun money(v: Double): String =
-    (if (v % 1.0 == 0.0) v.toInt().toString() else "%.2f".format(v)) + " €"
+private fun money(v: Double): String = Format.eur(v)
 
 private fun shareText(context: Context, fileName: String, content: String) {
     val dir = File(context.getExternalFilesDir(null), "exports").apply { mkdirs() }

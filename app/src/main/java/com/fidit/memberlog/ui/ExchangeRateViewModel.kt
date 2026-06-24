@@ -19,14 +19,22 @@ class ExchangeRateViewModel : ViewModel() {
 
     private val tracked = listOf("USD", "CHF", "GBP", "AUD", "CAD")
 
+    private val fallbackRates = mapOf(
+        "USD" to 1.08,
+        "CHF" to 0.94,
+        "GBP" to 0.84,
+        "AUD" to 1.64,
+        "CAD" to 1.47
+    )
+
     private val _rates = mutableStateOf<Map<String, Double>>(emptyMap())
     val rates: State<Map<String, Double>> = _rates
 
     private val _isLoading = mutableStateOf(false)
     val isLoading: State<Boolean> = _isLoading
 
-    private val _errorMessage = mutableStateOf<String?>(null)
-    val errorMessage: State<String?> = _errorMessage
+    private val _offline = mutableStateOf(false)
+    val offline: State<Boolean> = _offline
 
     init {
         fetchRates()
@@ -35,12 +43,13 @@ class ExchangeRateViewModel : ViewModel() {
     fun fetchRates() {
         viewModelScope.launch {
             _isLoading.value = true
-            _errorMessage.value = null
             try {
                 val response = api.getExchangeRates()
                 _rates.value = response.rates.filter { it.key in tracked }
+                _offline.value = false
             } catch (e: Exception) {
-                _errorMessage.value = "Nije moguće dohvatiti tečajnu listu. Provjeri internetsku vezu."
+                _rates.value = fallbackRates.filter { it.key in tracked }
+                _offline.value = true
             } finally {
                 _isLoading.value = false
             }

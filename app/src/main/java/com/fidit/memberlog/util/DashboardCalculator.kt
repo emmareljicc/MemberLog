@@ -2,6 +2,7 @@ package com.fidit.memberlog.util
 
 import com.fidit.memberlog.model.Event
 import com.fidit.memberlog.model.FeePayment
+import com.fidit.memberlog.model.FeeRate
 import com.fidit.memberlog.model.Member
 import java.time.LocalDate
 import java.time.YearMonth
@@ -30,6 +31,7 @@ object DashboardCalculator {
         members: List<Member>,
         payments: List<FeePayment>,
         defaultMonthlyFee: Double,
+        rates: List<FeeRate> = emptyList(),
         events: List<Event> = emptyList(),
         today: String = LocalDate.now().toString(),
         now: YearMonth = YearMonth.now()
@@ -42,8 +44,12 @@ object DashboardCalculator {
         val debtors = mutableListOf<Pair<Member, Double>>()
 
         members.forEach { m ->
-            val fee = FeeCalculator.monthlyFeeFor(m.monthlyFeeOverride, defaultMonthlyFee)
-            val statuses = FeeCalculator.computeStatuses(m.joinDate, fee, paymentsByMember[m.id] ?: emptyList(), now)
+            val statuses = FeeCalculator.computeStatuses(
+                m.joinDate,
+                { p -> FeeCalculator.effectiveFee(m.id, p, rates, defaultMonthlyFee) },
+                paymentsByMember[m.id] ?: emptyList(),
+                now
+            )
             val owed = FeeCalculator.totalOwed(statuses)
             outstanding += owed
             if (owed > 0.0) debtors.add(m to owed)
@@ -54,13 +60,10 @@ object DashboardCalculator {
         val collectedTotal = payments.sumOf { it.amount }
 
         val joinMonths = members.mapNotNull { joinMonth(it.joinDate) }
-        val grouped = joinMonths.groupingBy { it }.eachCount().toSortedMap()
-        val growth = buildList {
-            var cumulative = 0
-            grouped.forEach { (month, count) ->
-                cumulative += count
-                add(month to cumulative)
-            }
+        val growth = (0..11).map { i ->
+            val ym = now.minusMonths((11 - i).toLong())
+            val key = "%04d-%02d".format(ym.year, ym.monthValue)
+            key to joinMonths.count { it <= key }
         }
 
         val recent = payments.sortedByDescending { it.paidDate }.take(6).map { p ->

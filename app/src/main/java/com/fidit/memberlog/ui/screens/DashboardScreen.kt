@@ -28,12 +28,14 @@ import com.fidit.memberlog.ui.theme.Dimens
 import com.fidit.memberlog.ui.theme.paidColor
 import com.fidit.memberlog.ui.theme.unpaidColor
 import com.fidit.memberlog.util.DateUtils
+import com.fidit.memberlog.util.Format
 import com.fidit.memberlog.util.roleColor
 
 @Composable
 fun DashboardScreen(
     rolesById: Map<Int, Role>,
     onMemberClick: (Int) -> Unit,
+    onEventClick: (Int) -> Unit,
     viewModel: DashboardViewModel = viewModel()
 ) {
     val statsState by viewModel.stats.collectAsState()
@@ -59,7 +61,7 @@ fun DashboardScreen(
         HeroCard(modifier = Modifier.fillMaxWidth()) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 ProgressRing(fraction = fraction, ringColor = paid, trackColor = MaterialTheme.colorScheme.outlineVariant) {
-                    Text("$pct%", style = MaterialTheme.typography.titleLarge)
+                    Text("$pct%", style = MaterialTheme.typography.headlineMedium)
                 }
                 Spacer(Modifier.width(20.dp))
                 Column {
@@ -81,17 +83,18 @@ fun DashboardScreen(
 
         AppCard(modifier = Modifier.fillMaxWidth()) {
             Text("Rast članstva", style = MaterialTheme.typography.titleMedium)
-            Text("Broj članova kroz vrijeme", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text("Broj članova u zadnjih 12 mjeseci", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(Dimens.gap))
 
             val maxMembers = stats.growth.maxOfOrNull { it.second } ?: 0
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(
-                    modifier = Modifier.width(24.dp).height(120.dp),
+                    modifier = Modifier.width(28.dp).height(120.dp),
                     verticalArrangement = Arrangement.SpaceBetween,
                     horizontalAlignment = Alignment.End
                 ) {
                     Text("$maxMembers", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("${maxMembers / 2}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Text("0", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 Spacer(Modifier.width(Dimens.gapSmall))
@@ -104,11 +107,15 @@ fun DashboardScreen(
             }
             if (stats.growth.size >= 2) {
                 Spacer(Modifier.height(Dimens.gapSmall))
+                val periods = stats.growth.map { it.first }
+                val lastIdx = periods.size - 1
+                val tickIdx = listOf(0, lastIdx / 3, (lastIdx * 2) / 3, lastIdx).distinct()
                 Row(Modifier.fillMaxWidth()) {
-                    Spacer(Modifier.width(32.dp))
+                    Spacer(Modifier.width(36.dp))
                     Row(Modifier.weight(1f), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text(DateUtils.formatPeriod(stats.growth.first().first), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text(DateUtils.formatPeriod(stats.growth.last().first), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        tickIdx.forEach { idx ->
+                            Text(DateUtils.formatMonthShort(periods[idx]), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
                     }
                 }
             }
@@ -123,7 +130,14 @@ fun DashboardScreen(
                 Text("Nema nadolazećih događanja.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             } else {
                 stats.upcomingEvents.take(3).forEach { ev ->
-                    Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .clip(MaterialTheme.shapes.small)
+                            .clickable { onEventClick(ev.id) }
+                            .padding(vertical = 6.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
                         Text(ev.title, style = MaterialTheme.typography.bodyMedium)
                         Text(DateUtils.formatIsoDate(ev.date), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
@@ -191,5 +205,4 @@ private fun StatTile(modifier: Modifier, label: String, value: String, valueColo
     }
 }
 
-private fun money(v: Double): String =
-    (if (v % 1.0 == 0.0) v.toInt().toString() else "%.2f".format(v)) + " €"
+private fun money(v: Double): String = Format.eur(v)

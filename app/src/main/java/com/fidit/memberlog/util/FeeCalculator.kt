@@ -1,6 +1,7 @@
 package com.fidit.memberlog.util
 
 import com.fidit.memberlog.model.FeePayment
+import com.fidit.memberlog.model.FeeRate
 import java.time.LocalDate
 import java.time.YearMonth
 import kotlin.math.roundToLong
@@ -21,6 +22,21 @@ object FeeCalculator {
     fun monthlyFeeFor(monthlyFeeOverride: Double?, clubDefault: Double): Double =
         monthlyFeeOverride ?: clubDefault
 
+    fun activeMemberRate(memberId: Int, period: String, rates: List<FeeRate>): FeeRate? =
+        rates.filter { it.memberId == memberId && it.effectiveFrom <= period }
+            .maxByOrNull { it.effectiveFrom }
+
+    fun effectiveFee(memberId: Int, period: String, rates: List<FeeRate>, fallback: Double): Double {
+        val memberRate = activeMemberRate(memberId, period, rates)
+        if (memberRate?.amount != null) return memberRate.amount
+        val globalRate = rates.filter { it.memberId == null && it.effectiveFrom <= period }
+            .maxByOrNull { it.effectiveFrom }
+        return globalRate?.amount ?: fallback
+    }
+
+    fun isOverridden(memberId: Int, period: String, rates: List<FeeRate>): Boolean =
+        activeMemberRate(memberId, period, rates)?.amount != null
+
     fun monthsFrom(joinIso: String, now: YearMonth = YearMonth.now()): List<String> {
         val start = parseStart(joinIso) ?: return emptyList()
         if (start.isAfter(now)) return listOf(fmt(start))
@@ -38,11 +54,19 @@ object FeeCalculator {
         monthlyFee: Double,
         payments: List<FeePayment>,
         now: YearMonth = YearMonth.now()
+    ): List<MonthStatus> = computeStatuses(joinIso, { monthlyFee }, payments, now)
+
+    fun computeStatuses(
+        joinIso: String,
+        feeForPeriod: (String) -> Double,
+        payments: List<FeePayment>,
+        now: YearMonth = YearMonth.now()
     ): List<MonthStatus> {
         val paidByPeriod = payments.groupBy { it.periodMonth }
             .mapValues { (_, ps) -> ps.sumOf { it.amount } }
         val nowStr = fmt(now)
         return monthsFrom(joinIso, now).map { period ->
+            val monthlyFee = feeForPeriod(period)
             val paid = paidByPeriod[period] ?: 0.0
             val status = when {
                 period > nowStr -> MonthFeeStatus.FUTURE
@@ -60,6 +84,9 @@ object FeeCalculator {
 
     fun owedMonthsCount(statuses: List<MonthStatus>): Int =
         statuses.count { it.status == MonthFeeStatus.UNPAID || it.status == MonthFeeStatus.PARTIAL }
+
+    fun oldestOutstanding(statuses: List<MonthStatus>): MonthStatus? =
+        statuses.firstOrNull { it.status == MonthFeeStatus.UNPAID || it.status == MonthFeeStatus.PARTIAL }
 
     private fun parseStart(joinIso: String): YearMonth? =
         try {

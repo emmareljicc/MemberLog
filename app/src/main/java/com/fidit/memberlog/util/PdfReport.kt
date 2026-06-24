@@ -58,6 +58,7 @@ object PdfReport {
             summary(data)
             val debtors = data.memberRows.filter { it.owed > 0.0 }.sortedByDescending { it.owed }
             table("Dugovanja", debtors.size, "Nema dužnika.", ::headDebtors) { rowDebtors(debtors[it]) }
+            table("Uplate", data.paymentRows.size, "Nema uplata u razdoblju.", ::headPayments) { rowPayments(data.paymentRows[it]) }
             table("Događanja", data.eventRows.size, "Nema događanja.", ::headEvents) { rowEvents(data.eventRows[it]) }
             finish()
         }
@@ -158,6 +159,20 @@ object PdfReport {
             canvas?.drawText(money(r.owed), RIGHT, y, text(10.5f, DEBT, align = Paint.Align.RIGHT))
         }
 
+        private fun headPayments() {
+            canvas?.drawText("ČLAN", LEFT, y, text(8.5f, MUTED, display))
+            canvas?.drawText("MJESEC", 330f, y, text(8.5f, MUTED, display))
+            canvas?.drawText("DATUM", 430f, y, text(8.5f, MUTED, display))
+            canvas?.drawText("IZNOS (EUR)", RIGHT, y, text(8.5f, MUTED, display, Paint.Align.RIGHT))
+        }
+
+        private fun rowPayments(p: PaymentRow) {
+            canvas?.drawText(clip(p.memberName, text(10.5f, INK), 270f), LEFT, y, text(10.5f, INK))
+            canvas?.drawText(DateUtils.formatPeriod(p.period), 330f, y, text(10.5f, INK))
+            canvas?.drawText(DateUtils.formatIsoDate(p.paidDate), 430f, y, text(10.5f, INK))
+            canvas?.drawText(money(p.amount), RIGHT, y, text(10.5f, INK, align = Paint.Align.RIGHT))
+        }
+
         private fun headEvents() {
             canvas?.drawText("NAZIV", LEFT, y, text(8.5f, MUTED, display))
             canvas?.drawText("DATUM", 350f, y, text(8.5f, MUTED, display))
@@ -188,6 +203,5 @@ object PdfReport {
         return "$s…"
     }
 
-    private fun money(v: Double): String =
-        if (v % 1.0 == 0.0) v.toInt().toString() else "%.2f".format(v)
+    private fun money(v: Double): String = Format.money(v)
 }

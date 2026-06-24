@@ -26,7 +26,7 @@ fun ExchangeRateScreen(
 ) {
     val ratesMap = viewModel.rates.value
     val isLoading = viewModel.isLoading.value
-    val errorMessage = viewModel.errorMessage.value
+    val offline = viewModel.offline.value
 
     Column(
         modifier = Modifier
@@ -45,14 +45,22 @@ fun ExchangeRateScreen(
             Spacer(Modifier.height(Dimens.gap))
         }
 
+        if (offline && !isLoading) {
+            AppCard(modifier = Modifier.fillMaxWidth(), contentPadding = 16.dp) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Bez internetske veze", style = MaterialTheme.typography.titleSmall)
+                        Text("Prikazani su zadani tečajevi.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    TextButton(onClick = { viewModel.fetchRates() }) { Text("Osvježi") }
+                }
+            }
+            Spacer(Modifier.height(Dimens.gap))
+        }
+
         Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
             when {
                 isLoading -> LoadingSpinner()
-                errorMessage != null -> Column(modifier = Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(errorMessage, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Spacer(Modifier.height(Dimens.gap))
-                    Button(onClick = { viewModel.fetchRates() }, shape = MaterialTheme.shapes.small) { Text("Pokušaj ponovno") }
-                }
                 ratesMap.isEmpty() -> Text("Nema dostupnih tečajeva.", modifier = Modifier.align(Alignment.Center), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 else -> LazyColumn(verticalArrangement = Arrangement.spacedBy(Dimens.gap)) {
                     items(ratesMap.toList()) { (currencyCode, rateValue) ->

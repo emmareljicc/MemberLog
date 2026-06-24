@@ -28,14 +28,15 @@ class ReportsViewModel(app: Application) : AndroidViewModel(app) {
         db.activityDao().allAttendance()
     ) { events, attendance -> events to attendance }
 
-    val reportData: StateFlow<ReportData?> = combine(base, activity, db.feeDao().getConfig()) { (members, payments, roles), (events, attendance), config ->
+    val reportData: StateFlow<ReportData?> = combine(base, activity, db.feeDao().getConfig(), db.feeDao().allRates()) { (members, payments, roles), (events, attendance), config, rates ->
         ReportBuilder.buildReportData(
             members = members,
             rolesById = roles.associateBy { it.id },
             payments = payments,
             events = events,
             attendance = attendance,
-            defaultMonthlyFee = (config ?: FeeConfig()).defaultMonthlyFee
+            defaultMonthlyFee = (config ?: FeeConfig()).defaultMonthlyFee,
+            rates = rates
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 }

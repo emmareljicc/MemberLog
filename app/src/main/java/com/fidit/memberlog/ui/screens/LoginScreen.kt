@@ -104,8 +104,5 @@ fun LoginScreen(
         TextButton(onClick = onRegister, modifier = Modifier.padding(top = 4.dp)) {
             Text("Nemaš račun? Registriraj se")
         }
-
-        Spacer(modifier = Modifier.height(8.dp))
-        DevLoginButtons(authViewModel = authViewModel, onLoginSuccess = onLoginSuccess)
     }
 }

@@ -18,7 +18,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class MainFlowE2ETest {
+class AdminFlowE2ETest {
 
     @get:Rule
     val compose = createEmptyComposeRule()
@@ -40,7 +40,7 @@ class MainFlowE2ETest {
             }
             compose.onNodeWithText("Novi član").performClick()
 
-            compose.onNodeWithText("Ime i Prezime").performTextInput(name)
+            compose.onNodeWithText("Ime i prezime").performTextInput(name)
             compose.onNodeWithText("E-mail adresa").performTextInput("e2e$stamp@test.com")
             compose.onNodeWithText("Lozinka za prijavu").performTextInput("lozinka")
             compose.onNodeWithText("Dodaj").performClick()
@@ -48,12 +48,10 @@ class MainFlowE2ETest {
             compose.waitUntil(timeoutMillis = 5_000) {
                 compose.onAllNodesWithText(name).fetchSemanticsNodes().isNotEmpty()
             }
-            compose.onNodeWithText(name).assertIsDisplayed()
-
             compose.onNodeWithText(name).performClick()
 
             compose.onNodeWithText("Zabilježi uplatu").performScrollTo().performClick()
-            compose.onNodeWithText("Spremi").performClick()
+            compose.onNodeWithText("Spremi uplatu").performClick()
 
             compose.waitUntil(timeoutMillis = 5_000) {
                 compose.onAllNodesWithText("Sve podmireno").fetchSemanticsNodes().isNotEmpty()

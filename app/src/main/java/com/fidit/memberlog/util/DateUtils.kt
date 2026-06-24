@@ -22,4 +22,11 @@ object DateUtils {
     } catch (e: Exception) {
         period
     }
+
+    fun formatMonthShort(period: String): String = try {
+        val ym = YearMonth.parse(period)
+        "%02d.%02d.".format(ym.monthValue, ym.year % 100)
+    } catch (e: Exception) {
+        period
+    }
 }

@@ -133,6 +133,10 @@ fun MainScreen(
                     onMemberClick = { id ->
                         selectedMemberId = id
                         selectedTab = 1
+                    },
+                    onEventClick = { id ->
+                        selectedEventId = id
+                        selectedTab = 2
                     }
                 )
 
@@ -163,13 +167,13 @@ fun MainScreen(
                 selectedTab == 2 -> run {
                     val id = selectedEventId
                     if (id == null) {
-                        ActivitiesScreen(isAdmin = true, onEventClick = { selectedEventId = it })
+                        ActivitiesScreen(isAdmin = isAdmin, onEventClick = { selectedEventId = it })
                     } else {
                         EventDetailScreen(
                             eventId = id,
                             members = members.orEmpty(),
                             rolesById = rolesById,
-                            isAdmin = true,
+                            isAdmin = isAdmin,
                             onBack = { selectedEventId = null }
                         )
                     }
@@ -178,7 +182,7 @@ fun MainScreen(
                 else -> SettingsScreen(
                     isDarkMode = isDarkMode,
                     onThemeChanged = onThemeChanged,
-                    isAdmin = true,
+                    isAdmin = isAdmin,
                     userName = currentUserName,
                     userRole = currentUserRole,
                     onOpenMyProfile = onOpenMyProfile,

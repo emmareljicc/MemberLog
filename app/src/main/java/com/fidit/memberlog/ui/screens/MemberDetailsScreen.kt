@@ -43,6 +43,7 @@ import com.fidit.memberlog.ui.theme.paidColor
 import com.fidit.memberlog.ui.theme.unpaidColor
 import com.fidit.memberlog.util.DateUtils
 import com.fidit.memberlog.util.FeeCalculator
+import com.fidit.memberlog.util.Format
 import com.fidit.memberlog.util.PasswordHash
 import com.fidit.memberlog.util.roleColor
 
@@ -64,6 +65,7 @@ fun MemberDetailsScreen(
     val accent = role?.let { roleColor(it.colorHex) } ?: MaterialTheme.colorScheme.primary
 
     val config by feeViewModel.config.collectAsState()
+    val rates by feeViewModel.rates.collectAsState()
     val payments by feeViewModel.paymentsFor(member.id).collectAsState(initial = null)
     val attendedState by activitiesViewModel.attendedEvents(member.id).collectAsState(initial = null)
 
@@ -74,8 +76,14 @@ fun MemberDetailsScreen(
         return
     }
 
-    val monthlyFee = FeeCalculator.monthlyFeeFor(member.monthlyFeeOverride, config.defaultMonthlyFee)
-    val statuses = FeeCalculator.computeStatuses(member.joinDate, monthlyFee, paymentList)
+    val currentMonth = DateUtils.currentYearMonth()
+    val monthlyFee = FeeCalculator.effectiveFee(member.id, currentMonth, rates, config.defaultMonthlyFee)
+    val isSpecialFee = FeeCalculator.isOverridden(member.id, currentMonth, rates)
+    val statuses = FeeCalculator.computeStatuses(
+        member.joinDate,
+        { p -> FeeCalculator.effectiveFee(member.id, p, rates, config.defaultMonthlyFee) },
+        paymentList
+    )
     val owed = FeeCalculator.totalOwed(statuses)
     val owedMonths = FeeCalculator.owedMonthsCount(statuses)
     val owing = owed > 0.0
@@ -106,12 +114,17 @@ fun MemberDetailsScreen(
                 showEditDialog = false
             }
         )
-        rp != null -> RecordPaymentScreen(
-            period = rp,
-            expectedAmount = monthlyFee,
-            onBack = { recordPeriod = null },
-            onConfirm = { amount, dateIso -> feeViewModel.recordPayment(member.id, rp, amount, dateIso); recordPeriod = null }
-        )
+        rp != null -> {
+            val rpStatus = statuses.firstOrNull { it.period == rp }
+            val expectedForRp = rpStatus?.let { (it.expected - it.paid).coerceAtLeast(0.0) }
+                ?: FeeCalculator.effectiveFee(member.id, rp, rates, config.defaultMonthlyFee)
+            RecordPaymentScreen(
+                period = rp,
+                expectedAmount = expectedForRp,
+                onBack = { recordPeriod = null },
+                onConfirm = { amount, dateIso -> feeViewModel.recordPayment(member.id, rp, amount, dateIso); recordPeriod = null }
+            )
+        }
         else -> Column(
         modifier = Modifier
             .fillMaxSize()
@@ -151,7 +164,7 @@ fun MemberDetailsScreen(
         AppCard(modifier = Modifier.fillMaxWidth(), contentPadding = 20.dp) {
             Text("Članarina", style = MaterialTheme.typography.titleMedium)
             Text(
-                "Mjesečni iznos: ${money(monthlyFee)}" + if (member.monthlyFeeOverride != null) " (poseban)" else "",
+                "Mjesečni iznos: ${money(monthlyFee)}" + if (isSpecialFee) " (poseban)" else "",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -169,7 +182,7 @@ fun MemberDetailsScreen(
             FeeHeatmap(statuses = statuses, onCellClick = { if (isAdmin) recordPeriod = it }, modifier = Modifier.fillMaxWidth())
             if (isAdmin) {
                 Spacer(Modifier.height(Dimens.gap))
-                Button(onClick = { recordPeriod = DateUtils.currentYearMonth() }, modifier = Modifier.fillMaxWidth().height(48.dp), shape = MaterialTheme.shapes.small) {
+                Button(onClick = { recordPeriod = FeeCalculator.oldestOutstanding(statuses)?.period ?: DateUtils.currentYearMonth() }, modifier = Modifier.fillMaxWidth().height(48.dp), shape = MaterialTheme.shapes.small) {
                     Icon(Icons.Default.Add, contentDescription = null)
                     Spacer(Modifier.width(Dimens.gapSmall))
                     Text("Zabilježi uplatu")
@@ -226,5 +239,4 @@ private fun InfoRow(icon: androidx.compose.ui.graphics.vector.ImageVector, label
     }
 }
 
-private fun money(v: Double): String =
-    (if (v % 1.0 == 0.0) v.toInt().toString() else "%.2f".format(v)) + " €"
+private fun money(v: Double): String = Format.eur(v)

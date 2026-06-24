@@ -7,6 +7,7 @@ import com.fidit.memberlog.data.FeeRepository
 import com.fidit.memberlog.data.MemberDatabase
 import com.fidit.memberlog.model.FeeConfig
 import com.fidit.memberlog.model.FeePayment
+import com.fidit.memberlog.model.FeeRate
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -21,6 +22,9 @@ class FeeViewModel(app: Application) : AndroidViewModel(app) {
     val config: StateFlow<FeeConfig> = repo.config
         .map { it ?: FeeConfig() }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), FeeConfig())
+
+    val rates: StateFlow<List<FeeRate>> = repo.allRates
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     fun paymentsFor(memberId: Int): Flow<List<FeePayment>> = repo.paymentsForMember(memberId)
 

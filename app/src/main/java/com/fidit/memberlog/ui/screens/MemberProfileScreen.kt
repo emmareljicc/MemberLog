@@ -31,7 +31,6 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,11 +42,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fidit.memberlog.LoginActivity
 import com.fidit.memberlog.model.Member
 import com.fidit.memberlog.model.MembershipStatus
-import com.fidit.memberlog.ui.MembersViewModel
 import com.fidit.memberlog.ui.MemberSessionViewModel
 import com.fidit.memberlog.ui.components.AppCard
 import com.fidit.memberlog.ui.components.HeroCard
@@ -65,8 +62,7 @@ fun MemberProfileScreen(
     isDarkMode: Boolean,
     onThemeChanged: (Boolean) -> Unit,
     sessionViewModel: MemberSessionViewModel,
-    onNavigateToExchangeRates: () -> Unit,
-    membersViewModel: MembersViewModel = viewModel()
+    onNavigateToExchangeRates: () -> Unit
 ) {
     val context = LocalContext.current
     var email by remember(member.id) { mutableStateOf(member.email) }
@@ -74,9 +70,6 @@ fun MemberProfileScreen(
     var address by remember(member.id) { mutableStateOf(member.address) }
     var photoPath by remember(member.id) { mutableStateOf(member.photoPath) }
     var newPassword by remember { mutableStateOf("") }
-
-    val owedByMember by membersViewModel.owedByMember.collectAsState()
-    val memberOwed = owedByMember?.get(member.id) ?: 0.0
 
     val pickPhoto = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) copyMemberPhoto(context, uri)?.let { photoPath = it }
@@ -165,16 +158,6 @@ fun MemberProfileScreen(
                 }
                 Text("›", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-        }
-
-        if (memberOwed > 0.0) {
-            Spacer(Modifier.height(Dimens.gapSmall))
-            Text(
-                text = "Trenutni dug: ${String.format("%.2f", memberOwed)} EUR",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.padding(start = 4.dp)
-            )
         }
 
         Spacer(Modifier.height(Dimens.sectionGap))
