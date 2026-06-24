@@ -112,7 +112,7 @@ fun ReportsScreen(
         Spacer(Modifier.height(Dimens.sectionGap))
 
         if (data == null) {
-            LoadingSpinner()
+            LoadingSpinner(Modifier.fillMaxSize())
             return@Column
         }
 

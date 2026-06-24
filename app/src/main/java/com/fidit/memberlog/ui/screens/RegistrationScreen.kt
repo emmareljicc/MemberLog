@@ -1,9 +1,11 @@
 package com.fidit.memberlog.ui.screens
 
 import android.widget.Toast
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fidit.memberlog.ui.AuthViewModel
@@ -22,7 +24,7 @@ fun RegistrationScreen(
 
     val roleList = roles
     if (roleList == null) {
-        LoadingSpinner()
+        LoadingSpinner(Modifier.fillMaxSize())
         return
     }
 

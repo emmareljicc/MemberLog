@@ -24,8 +24,8 @@ fun MemberAvatar(
     photoPath: String?,
     color: Color,
     size: Dp,
-    fontSize: TextUnit = 16.sp,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    fontSize: TextUnit = 16.sp
 ) {
     Box(
         modifier = modifier

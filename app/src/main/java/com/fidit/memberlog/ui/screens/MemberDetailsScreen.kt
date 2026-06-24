@@ -72,7 +72,7 @@ fun MemberDetailsScreen(
     val paymentList = payments
     val attendedEvents = attendedState
     if (paymentList == null || attendedEvents == null) {
-        LoadingSpinner()
+        LoadingSpinner(Modifier.fillMaxSize())
         return
     }
 

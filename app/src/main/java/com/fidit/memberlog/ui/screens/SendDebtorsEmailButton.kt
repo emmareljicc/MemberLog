@@ -1,11 +1,11 @@
 package com.fidit.memberlog.ui.screens
 
 import android.content.Intent
-import android.net.Uri
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.net.toUri
 import com.fidit.memberlog.util.ReportData
 
 @Composable
@@ -20,7 +20,7 @@ fun SendDebtorsEmailButton(reportData: ReportData?) {
         Button(
             onClick = {
                 val emailIntent = Intent(Intent.ACTION_SENDTO).apply {
-                    data = Uri.parse("mailto:")
+                    data = "mailto:".toUri()
                     putExtra(Intent.EXTRA_BCC, debtorEmails.toTypedArray())
                     putExtra(Intent.EXTRA_SUBJECT, "Podsjetnik za nepodmirenu članarinu")
                     putExtra(

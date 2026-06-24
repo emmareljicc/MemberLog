@@ -47,7 +47,7 @@ fun MemberHomeScreen(
     val paymentList = payments
     val attendedList = attended
     if (eventList == null || paymentList == null || attendedList == null) {
-        LoadingSpinner()
+        LoadingSpinner(Modifier.fillMaxSize())
         return
     }
 

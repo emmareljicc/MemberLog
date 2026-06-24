@@ -62,7 +62,7 @@ fun EventDetailScreen(
     var showEdit by remember { mutableStateOf(false) }
 
     if (event == null) {
-        LoadingSpinner()
+        LoadingSpinner(Modifier.fillMaxSize())
         return
     }
 
@@ -82,7 +82,7 @@ fun EventDetailScreen(
     val attendeeIds = attendeeState
     val rsvpIds = rsvpState
     if (attendeeIds == null || rsvpIds == null) {
-        LoadingSpinner()
+        LoadingSpinner(Modifier.fillMaxSize())
         return
     }
 

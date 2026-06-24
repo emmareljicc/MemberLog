@@ -81,7 +81,7 @@ fun RolesScreen(
     val roles = rolesState
     val counts = countsState
     if (roles == null || counts == null) {
-        LoadingSpinner()
+        LoadingSpinner(Modifier.fillMaxSize())
         return
     }
 

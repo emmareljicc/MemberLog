@@ -36,33 +36,40 @@ fun ExchangeRateScreen(
         ScreenHeader(title = "Tečajna lista (EUR)", subtitle = "Trenutni tečajevi valuta", onBack = onBack)
         Spacer(Modifier.height(Dimens.gap))
 
-        if (memberOwedEur > 0.0) {
-            AppCard(modifier = Modifier.fillMaxWidth(), contentPadding = 16.dp) {
-                Text("Vaš dug", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Spacer(Modifier.height(4.dp))
-                Text("%.2f EUR".format(memberOwedEur), style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.error)
-            }
-            Spacer(Modifier.height(Dimens.gap))
-        }
-
-        if (offline && !isLoading) {
-            AppCard(modifier = Modifier.fillMaxWidth(), contentPadding = 16.dp) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text("Bez internetske veze", style = MaterialTheme.typography.titleSmall)
-                        Text("Prikazani su zadani tečajevi.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        if (isLoading) {
+            LoadingSpinner(Modifier.fillMaxSize())
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth().weight(1f),
+                verticalArrangement = Arrangement.spacedBy(Dimens.gap)
+            ) {
+                if (memberOwedEur > 0.0) {
+                    item {
+                        AppCard(modifier = Modifier.fillMaxWidth(), contentPadding = 16.dp) {
+                            Text("Vaš dug", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Spacer(Modifier.height(4.dp))
+                            Text("%.2f EUR".format(memberOwedEur), style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.error)
+                        }
                     }
-                    TextButton(onClick = { viewModel.fetchRates() }) { Text("Osvježi") }
                 }
-            }
-            Spacer(Modifier.height(Dimens.gap))
-        }
-
-        Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
-            when {
-                isLoading -> LoadingSpinner()
-                ratesMap.isEmpty() -> Text("Nema dostupnih tečajeva.", modifier = Modifier.align(Alignment.Center), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                else -> LazyColumn(verticalArrangement = Arrangement.spacedBy(Dimens.gap)) {
+                if (offline) {
+                    item {
+                        AppCard(modifier = Modifier.fillMaxWidth(), contentPadding = 16.dp) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text("Bez internetske veze", style = MaterialTheme.typography.titleSmall)
+                                    Text("Prikazani su zadani tečajevi.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                                TextButton(onClick = { viewModel.fetchRates() }) { Text("Osvježi") }
+                            }
+                        }
+                    }
+                }
+                if (ratesMap.isEmpty()) {
+                    item {
+                        Text("Nema dostupnih tečajeva.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                } else {
                     items(ratesMap.toList()) { (currencyCode, rateValue) ->
                         ExchangeRateItem(currencyCode = currencyCode, rateValue = rateValue, memberOwedEur = memberOwedEur)
                     }

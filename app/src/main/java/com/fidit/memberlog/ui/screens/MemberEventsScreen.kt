@@ -39,7 +39,7 @@ fun MemberEventsScreen(
         Spacer(Modifier.height(Dimens.gap))
 
         val eventList = events
-        if (eventList == null) LoadingSpinner()
+        if (eventList == null) LoadingSpinner(Modifier.fillMaxSize())
         else LazyColumn(verticalArrangement = Arrangement.spacedBy(Dimens.gap)) {
             items(eventList) { event ->
                 val upcoming = event.date >= today

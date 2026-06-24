@@ -63,7 +63,7 @@ fun ActivitiesScreen(
 
         val eventList = events
         if (eventList == null) {
-            LoadingSpinner()
+            LoadingSpinner(Modifier.fillMaxSize())
         } else {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(Dimens.gap)) {
                 items(eventList) { event ->

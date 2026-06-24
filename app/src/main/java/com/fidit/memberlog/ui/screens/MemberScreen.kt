@@ -88,7 +88,7 @@ fun MemberScreen(
         ) {
             val m = member
             if (m == null) {
-                LoadingSpinner()
+                LoadingSpinner(Modifier.fillMaxSize())
             } else {
                 when (selectedTab) {
                     0 -> MemberHomeScreen(m, feeViewModel, activitiesViewModel, onOpenEvents = { selectedTab = 2 })

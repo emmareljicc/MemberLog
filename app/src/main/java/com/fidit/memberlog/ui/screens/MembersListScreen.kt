@@ -110,7 +110,7 @@ fun MembersListScreen(
         Spacer(Modifier.height(Dimens.gap))
 
         when {
-            members == null || owedByMember == null -> LoadingSpinner()
+            members == null || owedByMember == null -> LoadingSpinner(Modifier.fillMaxSize())
             filtered.isEmpty() -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text(
                     "Nema članova koji odgovaraju filtrima.",

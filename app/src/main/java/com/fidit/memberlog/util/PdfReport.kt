@@ -2,11 +2,11 @@ package com.fidit.memberlog.util
 
 import android.content.Context
 import android.graphics.Canvas
-import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Typeface
 import android.graphics.pdf.PdfDocument
 import androidx.core.content.res.ResourcesCompat
+import androidx.core.graphics.toColorInt
 import com.fidit.memberlog.R
 import java.io.File
 import java.time.LocalDate
@@ -19,11 +19,11 @@ object PdfReport {
     private const val RIGHT = 547f
     private const val BOTTOM = 788f
 
-    private val INK = Color.parseColor("#1C1B20")
-    private val MUTED = Color.parseColor("#6B6580")
-    private val HAIRLINE = Color.parseColor("#D9D3E4")
-    private val RULE = Color.parseColor("#1C1B20")
-    private val DEBT = Color.parseColor("#A53B30")
+    private val INK = "#1C1B20".toColorInt()
+    private val MUTED = "#6B6580".toColorInt()
+    private val HAIRLINE = "#D9D3E4".toColorInt()
+    private val RULE = "#1C1B20".toColorInt()
+    private val DEBT = "#A53B30".toColorInt()
 
     fun write(context: Context, data: ReportData, periodLabel: String? = null): File {
         val grotesk = ResourcesCompat.getFont(context, R.font.space_grotesk) ?: Typeface.DEFAULT_BOLD
