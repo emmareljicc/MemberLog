@@ -1,5 +1,6 @@
 package com.fidit.memberlog.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -32,6 +33,7 @@ import com.fidit.memberlog.util.roleColor
 @Composable
 fun DashboardScreen(
     rolesById: Map<Int, Role>,
+    onMemberClick: (Int) -> Unit,
     viewModel: DashboardViewModel = viewModel()
 ) {
     val statsState by viewModel.stats.collectAsState()
@@ -143,6 +145,7 @@ fun DashboardScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(MaterialTheme.shapes.small)
+                            .clickable { onMemberClick(member.id) }
                             .padding(vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {

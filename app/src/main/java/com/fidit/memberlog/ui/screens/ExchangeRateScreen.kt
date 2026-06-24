@@ -1,100 +1,111 @@
 package com.fidit.memberlog.ui.screens
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fidit.memberlog.ui.ExchangeRateViewModel
-import java.util.Locale
+import com.fidit.memberlog.ui.components.AppCard
+import com.fidit.memberlog.ui.components.LoadingSpinner
+import com.fidit.memberlog.ui.components.ScreenHeader
+import com.fidit.memberlog.ui.theme.Dimens
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExchangeRateScreen(
     onBack: () -> Unit,
     memberOwedEur: Double = 0.0,
-    exchangeRateViewModel: ExchangeRateViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    viewModel: ExchangeRateViewModel = viewModel()
 ) {
-    val rates = exchangeRateViewModel.rates.value
+    val ratesMap = viewModel.rates.value
+    val isLoading = viewModel.isLoading.value
+    val errorMessage = viewModel.errorMessage.value
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Tečajna lista (EUR)") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Nazad")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
-                )
-            )
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(Dimens.screenPadding)
+    ) {
+        ScreenHeader(title = "Tečajna lista (EUR)", subtitle = "Trenutni tečajevi valuta", onBack = onBack)
+        Spacer(Modifier.height(Dimens.gap))
+
+        if (memberOwedEur > 0.0) {
+            AppCard(modifier = Modifier.fillMaxWidth(), contentPadding = 16.dp) {
+                Text("Vaš dug", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Spacer(Modifier.height(4.dp))
+                Text("%.2f EUR".format(memberOwedEur), style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.error)
+            }
+            Spacer(Modifier.height(Dimens.gap))
         }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(16.dp)
-        ) {
-            Text(
-                text = "Trenutni tečajevi valuta",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
 
-            Text(
-                text = String.format(Locale.getDefault(), "Vaš dug: %.2f EUR", memberOwedEur),
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(rates.toList()) { (currency, rate) ->
-                    val convertedAmount = memberOwedEur * rate
-
-                    Card(
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column {
-                                Text(
-                                    text = "1 EUR = $rate $currency",
-                                    style = MaterialTheme.typography.bodyLarge
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = String.format(Locale.getDefault(), "Dug u %s: %.2f", currency, convertedAmount),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                        }
+        Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
+            when {
+                isLoading -> LoadingSpinner()
+                errorMessage != null -> Column(modifier = Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(errorMessage, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Spacer(Modifier.height(Dimens.gap))
+                    Button(onClick = { viewModel.fetchRates() }, shape = MaterialTheme.shapes.small) { Text("Pokušaj ponovno") }
+                }
+                ratesMap.isEmpty() -> Text("Nema dostupnih tečajeva.", modifier = Modifier.align(Alignment.Center), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                else -> LazyColumn(verticalArrangement = Arrangement.spacedBy(Dimens.gap)) {
+                    items(ratesMap.toList()) { (currencyCode, rateValue) ->
+                        ExchangeRateItem(currencyCode = currencyCode, rateValue = rateValue, memberOwedEur = memberOwedEur)
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ExchangeRateItem(currencyCode: String, rateValue: Double, memberOwedEur: Double) {
+    AppCard(modifier = Modifier.fillMaxWidth(), contentPadding = 16.dp) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primary),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(currencyCode, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onPrimary)
+            }
+            Spacer(Modifier.width(16.dp))
+            Column {
+                Text(
+                    when (currencyCode) {
+                        "USD" -> "Američki dolar"
+                        "CHF" -> "Švicarski franak"
+                        "GBP" -> "Britanska funta"
+                        "AUD" -> "Australski dolar"
+                        "CAD" -> "Kanadski dolar"
+                        else -> "Strana valuta"
+                    },
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Spacer(Modifier.height(6.dp))
+                Surface(shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.primary) {
+                    Text(
+                        "1 EUR = %.2f %s".format(rateValue, currencyCode),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                    )
+                }
+                if (memberOwedEur > 0.0) {
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        "Dug u %s: %.2f".format(currencyCode, memberOwedEur * rateValue),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
         }

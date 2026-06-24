@@ -128,7 +128,13 @@ fun MainScreen(
                 showRoles -> RolesScreen(isAdmin = isAdmin, onBack = { showRoles = false })
                 showReports -> ReportsScreen(onBack = { showReports = false })
 
-                selectedTab == 0 -> DashboardScreen(rolesById = rolesById)
+                selectedTab == 0 -> DashboardScreen(
+                    rolesById = rolesById,
+                    onMemberClick = { id ->
+                        selectedMemberId = id
+                        selectedTab = 1
+                    }
+                )
 
                 selectedTab == 1 -> run {
                     val selectedMember = members?.find { it.id == selectedMemberId }
