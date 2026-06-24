@@ -114,7 +114,7 @@ fun MembersListScreen(
             members == null || owedByMember == null -> LoadingSpinner(Modifier.fillMaxSize())
             filtered.isEmpty() -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text(
-                    "Nema članova koji odgovaraju filtrima.",
+                    "Nema članova koji odgovaraju filterima.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
