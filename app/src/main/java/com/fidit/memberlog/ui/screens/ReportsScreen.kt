@@ -9,7 +9,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.PictureAsPdf
@@ -133,6 +132,11 @@ fun ReportsScreen(
             val file = PdfReport.write(context, data, periodLabel)
             shareFile(context, file, "application/pdf")
         }
+
+        Spacer(Modifier.height(32.dp))
+
+        // Pozivamo komponentu gumba i prepuštamo njoj da iz allData izvuče ReportRow elemente
+        SendDebtorsEmailButton(reportData = allData)
 
         Spacer(Modifier.height(Dimens.gap))
     }
