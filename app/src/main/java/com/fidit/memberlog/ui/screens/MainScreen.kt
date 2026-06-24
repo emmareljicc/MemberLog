@@ -1,14 +1,23 @@
 package com.fidit.memberlog.ui.screens
 
 import android.widget.Toast
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Event
 import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.Group
 import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -118,9 +127,9 @@ fun MainScreen(
                 )
                 showRoles -> RolesScreen(isAdmin = isAdmin, onBack = { showRoles = false })
                 showReports -> ReportsScreen(onBack = { showReports = false })
-                selectedTab == 0 -> DashboardScreen(
-                    rolesById = rolesById
-                )
+
+                selectedTab == 0 -> DashboardScreen(rolesById = rolesById)
+
                 selectedTab == 1 -> run {
                     val selectedMember = members?.find { it.id == selectedMemberId }
                     if (selectedMember == null) {
@@ -144,20 +153,22 @@ fun MainScreen(
                         )
                     }
                 }
+
                 selectedTab == 2 -> run {
                     val id = selectedEventId
                     if (id == null) {
-                        ActivitiesScreen(isAdmin = isAdmin, onEventClick = { selectedEventId = it })
+                        ActivitiesScreen(isAdmin = true, onEventClick = { selectedEventId = it })
                     } else {
                         EventDetailScreen(
                             eventId = id,
                             members = members.orEmpty(),
                             rolesById = rolesById,
-                            isAdmin = isAdmin,
+                            isAdmin = true,
                             onBack = { selectedEventId = null }
                         )
                     }
                 }
+
                 else -> SettingsScreen(
                     isDarkMode = isDarkMode,
                     onThemeChanged = onThemeChanged,

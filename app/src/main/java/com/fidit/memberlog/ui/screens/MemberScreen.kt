@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.outlined.Event
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Person
@@ -17,6 +18,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -29,6 +31,8 @@ import com.fidit.memberlog.ui.MemberSessionViewModel
 import com.fidit.memberlog.ui.components.BackButton
 import com.fidit.memberlog.ui.components.LoadingSpinner
 import com.fidit.memberlog.ui.theme.Dimens
+import com.fidit.memberlog.util.DateUtils
+import java.time.LocalDate
 
 @Composable
 fun MemberScreen(
@@ -43,10 +47,12 @@ fun MemberScreen(
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
     val member by sessionViewModel.member(memberId).collectAsState(initial = null)
+    val feeConfig by feeViewModel.config.collectAsState()
 
     val destinations = listOf(
         BottomDest(Icons.Outlined.Home, "Početna"),
         BottomDest(Icons.Outlined.Event, "Događanja"),
+        BottomDest(Icons.Default.Payments, "Plaćanje"),
         BottomDest(Icons.Outlined.Person, "Profil")
     )
 
@@ -85,6 +91,27 @@ fun MemberScreen(
                 when (selectedTab) {
                     0 -> MemberHomeScreen(m, feeViewModel, activitiesViewModel)
                     1 -> MemberEventsScreen(m, activitiesViewModel)
+                    2 -> {
+                        val amountToPay = m.monthlyFeeOverride ?: feeConfig.defaultMonthlyFee
+                        val currentPeriod = LocalDate.now().toString().dropLast(3).replace('-', '-')
+
+                        key(amountToPay, selectedTab) {
+                            RecordPaymentScreen(
+                                period = DateUtils.todayIso(),
+                                expectedAmount = amountToPay,
+                                onBack = { selectedTab = 0 },
+                                onConfirm = { amount, paidDateIso ->
+                                    feeViewModel.recordPayment(
+                                        memberId = memberId,
+                                        period = paidDateIso.dropLast(3), // Osigurava ispravan format mjeseca (GGGG-MM) prema Room bazi
+                                        amount = amount,
+                                        paidDateIso = paidDateIso
+                                    )
+                                    selectedTab = 0
+                                }
+                            )
+                        }
+                    }
                     else -> MemberProfileScreen(
                         member = m,
                         isDarkMode = isDarkMode,

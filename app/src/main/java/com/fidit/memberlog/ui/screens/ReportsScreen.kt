@@ -54,8 +54,6 @@ fun ReportsScreen(
 
     val ym = YearMonth.now()
     val yr = LocalDate.now().year
-
-    // Inicijalizacija varijabli direktno kroz when izraz rješava grešku kompajlera
     val (fromIso, toIso) = when (period) {
         ExportPeriod.MONTH -> Pair(ym.atDay(1).toString(), ym.atEndOfMonth().toString())
         ExportPeriod.YEAR -> Pair("$yr-01-01", "$yr-12-31")
