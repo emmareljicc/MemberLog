@@ -66,24 +66,22 @@ fun MemberLogBottomBar(
             val w = size.width
             val h = size.height
             val cx = w / 2f
-            val r = notchPx
-            val c = cornerPx
-            moveTo(c, 0f)
-            lineTo(cx - r, 0f)
+            moveTo(cornerPx, 0f)
+            lineTo(cx - notchPx, 0f)
             arcTo(
-                rect = Rect(cx - r, -r, cx + r, r),
+                rect = Rect(cx - notchPx, -notchPx, cx + notchPx, notchPx),
                 startAngleDegrees = 180f,
                 sweepAngleDegrees = -180f,
                 forceMoveTo = false
             )
-            lineTo(w - c, 0f)
-            quadraticTo(w, 0f, w, c)
-            lineTo(w, h - c)
-            quadraticTo(w, h, w - c, h)
-            lineTo(c, h)
-            quadraticTo(0f, h, 0f, h - c)
-            lineTo(0f, c)
-            quadraticTo(0f, 0f, c, 0f)
+            lineTo(w - cornerPx, 0f)
+            quadraticTo(w, 0f, w, cornerPx)
+            lineTo(w, h - cornerPx)
+            quadraticTo(w, h, w - cornerPx, h)
+            lineTo(cornerPx, h)
+            quadraticTo(0f, h, 0f, h - cornerPx)
+            lineTo(0f, cornerPx)
+            quadraticTo(0f, 0f, cornerPx, 0f)
             close()
         }
     }

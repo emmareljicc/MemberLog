@@ -115,6 +115,21 @@ fun MainScreen(
                         showAddDialog = false
                     }
                 )
+                selectedTab == 1 && selectedMemberId != null && members?.any { it.id == selectedMemberId } == true -> {
+                    val selectedMember = members!!.first { it.id == selectedMemberId }
+                    MemberDetailsScreen(
+                        member = selectedMember,
+                        roles = roles,
+                        isAdmin = isAdmin,
+                        onBack = { selectedMemberId = null },
+                        onUpdate = { updatedMember -> viewModel.updateMember(updatedMember) },
+                        onDelete = {
+                            viewModel.deleteMember(selectedMember)
+                            selectedMemberId = null
+                        }
+                    )
+                }
+
                 showAddEvent -> EventFormScreen(
                     title = "Novo događanje",
                     onBack = { showAddEvent = false },
@@ -140,29 +155,12 @@ fun MainScreen(
                     }
                 )
 
-                selectedTab == 1 -> run {
-                    val selectedMember = members?.find { it.id == selectedMemberId }
-                    if (selectedMember == null) {
-                        MembersListScreen(
-                            members = members,
-                            owedByMember = owedByMember,
-                            rolesById = rolesById,
-                            onMemberClick = { clickedMember -> selectedMemberId = clickedMember.id }
-                        )
-                    } else {
-                        MemberDetailsScreen(
-                            member = selectedMember,
-                            roles = roles,
-                            isAdmin = isAdmin,
-                            onBack = { selectedMemberId = null },
-                            onUpdate = { updatedMember -> viewModel.updateMember(updatedMember) },
-                            onDelete = {
-                                viewModel.deleteMember(selectedMember)
-                                selectedMemberId = null
-                            }
-                        )
-                    }
-                }
+                selectedTab == 1 -> MembersListScreen(
+                    members = members,
+                    owedByMember = owedByMember,
+                    rolesById = rolesById,
+                    onMemberClick = { clickedMember -> selectedMemberId = clickedMember.id }
+                )
 
                 selectedTab == 2 -> run {
                     val id = selectedEventId

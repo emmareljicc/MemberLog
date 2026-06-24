@@ -11,8 +11,6 @@ class RoleRepository(private val dao: RoleDao) {
 
     suspend fun update(role: Role) = dao.update(role)
 
-    suspend fun memberCount(roleId: Int): Int = dao.countMembersWithRole(roleId)
-
     suspend fun deleteWithReassign(role: Role, replacementId: Int) {
         if (replacementId != role.id) {
             dao.reassignMembers(role.id, replacementId)

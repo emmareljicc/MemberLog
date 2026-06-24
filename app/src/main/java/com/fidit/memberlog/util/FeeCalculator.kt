@@ -19,9 +19,6 @@ object FeeCalculator {
 
     private fun cents(v: Double): Long = (v * 100).roundToLong()
 
-    fun monthlyFeeFor(monthlyFeeOverride: Double?, clubDefault: Double): Double =
-        monthlyFeeOverride ?: clubDefault
-
     fun activeMemberRate(memberId: Int, period: String, rates: List<FeeRate>): FeeRate? =
         rates.filter { it.memberId == memberId && it.effectiveFrom <= period }
             .maxByOrNull { it.effectiveFrom }

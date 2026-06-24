@@ -1,7 +1,6 @@
 package com.fidit.memberlog.data
 
 import androidx.room.Dao
-import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -21,9 +20,6 @@ interface FeeDao {
 
     @Insert
     suspend fun insertPayment(payment: FeePayment)
-
-    @Delete
-    suspend fun deletePayment(payment: FeePayment)
 
     @Query("SELECT * FROM fee_config WHERE id = 1")
     fun getConfig(): Flow<FeeConfig?>

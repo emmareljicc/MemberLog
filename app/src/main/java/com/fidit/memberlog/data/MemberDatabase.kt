@@ -48,7 +48,7 @@ abstract class MemberDatabase : RoomDatabase() {
             }
         }
 
-        private val SeedCallback = object : RoomDatabase.Callback() {
+        private val SeedCallback = object : Callback() {
             override fun onCreate(db: SupportSQLiteDatabase) {
                 super.onCreate(db)
                 seedDatabase(db)
@@ -74,30 +74,30 @@ abstract class MemberDatabase : RoomDatabase() {
                 val pw = PasswordHash.sha256("lozinka")
 
                 val members = listOf(
-                    arrayOf<String?>("Ivan Horvat", "1", "2021-03-01", "ivan.horvat@email.com", "091 123-4567", "ACTIVE", "Ilica 25, Zagreb", "", null),
-                    arrayOf<String?>("Marko Marić", "2", "2022-08-15", "marko.maric@email.com", "092 876-5432", "ACTIVE", "Vukovarska 14, Split", "", null),
-                    arrayOf<String?>("Ana Anić", "3", "2022-10-10", "ana.anic@email.com", "095 555-4443", "ACTIVE", "Korzo 7, Rijeka", "", null),
-                    arrayOf<String?>("Petra Petrović", "4", "2024-02-05", "petra.petrovic@email.com", "098 987-6543", "ACTIVE", "Trg slobode 3, Osijek", "", null),
-                    arrayOf<String?>("Josip Jurić", "4", "2023-08-20", "josip.juric@email.com", "097 111-2222", "INACTIVE", "Zrinska 9, Varaždin", "", null),
-                    arrayOf<String?>("Marija Kovač", "4", "2021-09-01", "marija.kovac@email.com", "091 222-3344", "ACTIVE", "Maksimirska 110, Zagreb", "", null),
-                    arrayOf<String?>("Luka Novak", "4", "2023-01-12", "luka.novak@email.com", "098 333-1122", "ACTIVE", "Riva 5, Zadar", "", null),
-                    arrayOf<String?>("Iva Babić", "4", "2020-05-01", "iva.babic@email.com", "095 777-8899", "HONORARY", "Tkalčićeva 18, Zagreb", "", null),
-                    arrayOf<String?>("Tomislav Knežević", "4", "2024-09-10", "tomislav.knezevic@email.com", "097 444-5566", "ACTIVE", "Slavonska 2, Đakovo", "", null),
-                    arrayOf<String?>("Sara Vuković", "4", "2022-03-03", "sara.vukovic@email.com", "091 888-1212", "ACTIVE", "Branimirova 33, Zagreb", "", null),
-                    arrayOf<String?>("Filip Pavlović", "4", "2023-11-05", "filip.pavlovic@email.com", "092 121-3434", "INACTIVE", "Šetalište 8, Pula", "", null),
-                    arrayOf<String?>("Dora Matić", "4", "2025-01-15", "dora.matic@email.com", "099 565-7878", "ACTIVE", "Kvaternikov trg 1, Zagreb", "", null),
-                    arrayOf<String?>("Nikolina Babić", "4", "2025-09-12", "nikolina.babic@email.com", "098 210-3456", "ACTIVE", "Petrinjska 12, Sisak", "Vodi sekciju fotografije", null),
-                    arrayOf<String?>("Ante Tomić", "4", "2019-04-18", "ante.tomic@email.com", "091 640-7788", "HONORARY", "Stradun 4, Dubrovnik", "Počasni član od osnutka", "0.0"),
-                    arrayOf<String?>("Lucija Horvat", "2", "2024-06-30", "lucija.horvat@email.com", "095 330-1290", "ACTIVE", "Trg bana Jelačića 9, Zagreb", "Zamjenica tajnika", null),
-                    arrayOf<String?>("Matej Kovačević", "4", "2025-12-03", "matej.kovacevic@email.com", "092 455-6677", "ACTIVE", "Kapucinska 5, Varaždin", "Student, snižena članarina", "5.0"),
-                    arrayOf<String?>("Ena Jurić", "4", "2026-02-20", "ena.juric@email.com", "097 812-3344", "ACTIVE", "Ulica grada Vukovara 21, Vinkovci", "", null),
-                    arrayOf<String?>("Davor Marić", "3", "2020-11-11", "davor.maric@email.com", "099 123-9988", "ACTIVE", "Frankopanska 30, Karlovac", "Pomoćni blagajnik", null),
-                    arrayOf<String?>("Petra Novak", "4", "2023-05-22", "petra.novak@email.com", "091 777-2210", "INACTIVE", "Obala 14, Šibenik", "Privremeno na pauzi", null),
-                    arrayOf<String?>("Karlo Babić", "4", "2025-07-08", "karlo.babic@email.com", "098 553-4321", "ACTIVE", "Vukovarska 88, Osijek", "Plaća višu članarinu kao podršku", "15.0"),
-                    arrayOf<String?>("Mia Vuković", "4", "2026-04-05", "mia.vukovic@email.com", "095 909-1234", "ACTIVE", "Zagrebačka 2, Čakovec", "", null),
-                    arrayOf<String?>("Stjepan Knežević", "4", "2018-09-30", "stjepan.knezevic@email.com", "092 334-5567", "HONORARY", "Masarykova 1, Bjelovar", "Počasni član, bivši voditelj", "0.0"),
-                    arrayOf<String?>("Lana Pavlović", "4", "2024-10-17", "lana.pavlovic@email.com", "097 220-8765", "ACTIVE", "Adamićeva 6, Rijeka", "Sekcija mladih", null),
-                    arrayOf<String?>("Roko Matić", "4", "2025-11-25", "roko.matic@email.com", "091 445-9090", "INACTIVE", "Splitska 19, Split", "Ne plaća redovito", null)
+                    arrayOf("Ivan Horvat", "1", "2021-03-01", "ivan.horvat@email.com", "091 123-4567", "ACTIVE", "Ilica 25, Zagreb", "", null),
+                    arrayOf("Marko Marić", "2", "2022-08-15", "marko.maric@email.com", "092 876-5432", "ACTIVE", "Vukovarska 14, Split", "", null),
+                    arrayOf("Ana Anić", "3", "2022-10-10", "ana.anic@email.com", "095 555-4443", "ACTIVE", "Korzo 7, Rijeka", "", null),
+                    arrayOf("Petra Petrović", "4", "2024-02-05", "petra.petrovic@email.com", "098 987-6543", "ACTIVE", "Trg slobode 3, Osijek", "", null),
+                    arrayOf("Josip Jurić", "4", "2023-08-20", "josip.juric@email.com", "097 111-2222", "INACTIVE", "Zrinska 9, Varaždin", "", null),
+                    arrayOf("Marija Kovač", "4", "2021-09-01", "marija.kovac@email.com", "091 222-3344", "ACTIVE", "Maksimirska 110, Zagreb", "", null),
+                    arrayOf("Luka Novak", "4", "2023-01-12", "luka.novak@email.com", "098 333-1122", "ACTIVE", "Riva 5, Zadar", "", null),
+                    arrayOf("Iva Babić", "4", "2020-05-01", "iva.babic@email.com", "095 777-8899", "HONORARY", "Tkalčićeva 18, Zagreb", "", null),
+                    arrayOf("Tomislav Knežević", "4", "2024-09-10", "tomislav.knezevic@email.com", "097 444-5566", "ACTIVE", "Slavonska 2, Đakovo", "", null),
+                    arrayOf("Sara Vuković", "4", "2022-03-03", "sara.vukovic@email.com", "091 888-1212", "ACTIVE", "Branimirova 33, Zagreb", "", null),
+                    arrayOf("Filip Pavlović", "4", "2023-11-05", "filip.pavlovic@email.com", "092 121-3434", "INACTIVE", "Šetalište 8, Pula", "", null),
+                    arrayOf("Dora Matić", "4", "2025-01-15", "dora.matic@email.com", "099 565-7878", "ACTIVE", "Kvaternikov trg 1, Zagreb", "", null),
+                    arrayOf("Nikolina Babić", "4", "2025-09-12", "nikolina.babic@email.com", "098 210-3456", "ACTIVE", "Petrinjska 12, Sisak", "Vodi sekciju fotografije", null),
+                    arrayOf("Ante Tomić", "4", "2019-04-18", "ante.tomic@email.com", "091 640-7788", "HONORARY", "Stradun 4, Dubrovnik", "Počasni član od osnutka", "0.0"),
+                    arrayOf("Lucija Horvat", "2", "2024-06-30", "lucija.horvat@email.com", "095 330-1290", "ACTIVE", "Trg bana Jelačića 9, Zagreb", "Zamjenica tajnika", null),
+                    arrayOf("Matej Kovačević", "4", "2025-12-03", "matej.kovacevic@email.com", "092 455-6677", "ACTIVE", "Kapucinska 5, Varaždin", "Student, snižena članarina", "5.0"),
+                    arrayOf("Ena Jurić", "4", "2026-02-20", "ena.juric@email.com", "097 812-3344", "ACTIVE", "Ulica grada Vukovara 21, Vinkovci", "", null),
+                    arrayOf("Davor Marić", "3", "2020-11-11", "davor.maric@email.com", "099 123-9988", "ACTIVE", "Frankopanska 30, Karlovac", "Pomoćni blagajnik", null),
+                    arrayOf("Petra Novak", "4", "2023-05-22", "petra.novak@email.com", "091 777-2210", "INACTIVE", "Obala 14, Šibenik", "Privremeno na pauzi", null),
+                    arrayOf("Karlo Babić", "4", "2025-07-08", "karlo.babic@email.com", "098 553-4321", "ACTIVE", "Vukovarska 88, Osijek", "Plaća višu članarinu kao podršku", "15.0"),
+                    arrayOf("Mia Vuković", "4", "2026-04-05", "mia.vukovic@email.com", "095 909-1234", "ACTIVE", "Zagrebačka 2, Čakovec", "", null),
+                    arrayOf("Stjepan Knežević", "4", "2018-09-30", "stjepan.knezevic@email.com", "092 334-5567", "HONORARY", "Masarykova 1, Bjelovar", "Počasni član, bivši voditelj", "0.0"),
+                    arrayOf("Lana Pavlović", "4", "2024-10-17", "lana.pavlovic@email.com", "097 220-8765", "ACTIVE", "Adamićeva 6, Rijeka", "Sekcija mladih", null),
+                    arrayOf("Roko Matić", "4", "2025-11-25", "roko.matic@email.com", "091 445-9090", "INACTIVE", "Splitska 19, Split", "Ne plaća redovito", null)
                 )
                 val photos = mapOf(
                     "ivan.horvat@email.com" to "file:///android_asset/seed_photos/ivan.jpg",

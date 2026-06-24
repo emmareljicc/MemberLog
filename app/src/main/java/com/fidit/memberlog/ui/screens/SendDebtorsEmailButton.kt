@@ -13,8 +13,8 @@ fun SendDebtorsEmailButton(reportData: ReportData?) {
     val context = LocalContext.current
 
     val debtorEmails = reportData?.memberRows?.filter { row ->
-        row.owed > 0.0 && !row.email.isNullOrBlank()
-    }?.mapNotNull { it.email }.orEmpty()
+        row.owed > 0.0 && row.email.isNotBlank()
+    }?.map { it.email }.orEmpty()
 
     if (debtorEmails.isNotEmpty()) {
         Button(

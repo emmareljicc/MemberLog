@@ -26,9 +26,6 @@ interface RoleDao {
     @Delete
     suspend fun delete(role: Role)
 
-    @Query("SELECT COUNT(*) FROM members WHERE roleId = :roleId")
-    suspend fun countMembersWithRole(roleId: Int): Int
-
     @Query("UPDATE members SET roleId = :toRoleId WHERE roleId = :fromRoleId")
     suspend fun reassignMembers(fromRoleId: Int, toRoleId: Int)
 }

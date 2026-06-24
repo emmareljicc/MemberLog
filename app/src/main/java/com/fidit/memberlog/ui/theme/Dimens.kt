@@ -8,7 +8,6 @@ object Dimens {
     val gap = 12.dp
     val gapSmall = 8.dp
     val sectionGap = 24.dp
-    val iconNav = 24.dp
     val avatarSmall = 48.dp
     val avatarLarge = 88.dp
 }

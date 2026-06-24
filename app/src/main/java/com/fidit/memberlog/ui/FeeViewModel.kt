@@ -36,10 +36,6 @@ class FeeViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    fun deletePayment(payment: FeePayment) {
-        viewModelScope.launch { repo.deletePayment(payment) }
-    }
-
     fun setDefaultFee(amount: Double) {
         viewModelScope.launch { repo.setDefaultFee(amount) }
     }

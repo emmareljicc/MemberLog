@@ -17,9 +17,6 @@ interface ActivityDao {
     @Query("SELECT * FROM events ORDER BY date DESC")
     fun allEvents(): Flow<List<Event>>
 
-    @Query("SELECT * FROM events WHERE date >= :todayIso ORDER BY date ASC")
-    fun upcomingEvents(todayIso: String): Flow<List<Event>>
-
     @Insert
     suspend fun insertEvent(event: Event)
 

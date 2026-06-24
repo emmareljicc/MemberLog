@@ -49,10 +49,3 @@ val StatusUnpaid = Color(0xFFD7503F)
 val StatusPaidDark = Color(0xFF5FBE93)
 val StatusPartialDark = Color(0xFFE0B25C)
 val StatusUnpaidDark = Color(0xFFE8897C)
-
-val GreenSuccess = StatusPaid
-val RedAlert = StatusUnpaid
-
-val FeePaid = StatusPaid
-val FeePartial = StatusPartial
-val FeeUnpaid = StatusUnpaid

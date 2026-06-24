@@ -9,8 +9,6 @@ class ActivityRepository(private val dao: ActivityDao) {
 
     val allEvents: Flow<List<Event>> = dao.allEvents()
 
-    fun upcomingEvents(todayIso: String): Flow<List<Event>> = dao.upcomingEvents(todayIso)
-
     fun attendeeIds(eventId: Int): Flow<List<Int>> = dao.attendeeIds(eventId)
 
     fun attendedEvents(memberId: Int): Flow<List<Event>> = dao.attendedEvents(memberId)

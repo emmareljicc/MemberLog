@@ -7,7 +7,6 @@ import com.fidit.memberlog.data.MemberDatabase
 import com.fidit.memberlog.model.FeeConfig
 import com.fidit.memberlog.util.ReportBuilder
 import com.fidit.memberlog.util.ReportData
-import com.fidit.memberlog.util.ReportTotals
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine

@@ -135,7 +135,7 @@ fun MembersListScreen(
                                 Spacer(Modifier.height(6.dp))
                                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Dimens.gapSmall)) {
                                     RoleChip(name = role?.name ?: "Bez uloge", color = avatarColor)
-                                    val owed = owedByMember.orEmpty()[member.id] ?: 0.0
+                                    val owed = owedByMember[member.id] ?: 0.0
                                     if (owed > 0.0) StatusPill("Duguje ${money(owed)}", unpaidColor())
                                     else StatusPill("Podmireno", paidColor())
                                 }
