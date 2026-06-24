@@ -100,8 +100,9 @@ fun MemberScreen(
                         )
                         val target = FeeCalculator.oldestOutstanding(statuses)
                         val targetPeriod = target?.period ?: DateUtils.currentYearMonth()
-                        val amountToPay = target?.let { (it.expected - it.paid).coerceAtLeast(0.0) }
-                            ?: FeeCalculator.effectiveFee(m.id, targetPeriod, rates, feeConfig.defaultMonthlyFee)
+                        val totalOwed = FeeCalculator.totalOwed(statuses)
+                        val amountToPay = if (totalOwed > 0.0) totalOwed
+                            else FeeCalculator.effectiveFee(m.id, targetPeriod, rates, feeConfig.defaultMonthlyFee)
 
                         key(targetPeriod, amountToPay, selectedTab) {
                             RecordPaymentScreen(
@@ -109,10 +110,9 @@ fun MemberScreen(
                                 expectedAmount = amountToPay,
                                 onBack = { selectedTab = 0 },
                                 onConfirm = { amount, paidDateIso ->
-                                    feeViewModel.recordPayment(
+                                    feeViewModel.recordPayments(
                                         memberId = memberId,
-                                        period = targetPeriod,
-                                        amount = amount,
+                                        allocations = FeeCalculator.distributePayment(amount, statuses, targetPeriod),
                                         paidDateIso = paidDateIso
                                     )
                                     selectedTab = 0

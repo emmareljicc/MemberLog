@@ -38,7 +38,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 
 private val BarHeight = 64.dp
-private val Overhang = 10.dp
+private val Overhang = 4.dp
 private val ButtonSize = 56.dp
 private val CornerRadius = 28.dp
 private val NotchRadius = 34.dp

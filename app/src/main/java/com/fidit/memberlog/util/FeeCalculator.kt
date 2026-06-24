@@ -85,6 +85,29 @@ object FeeCalculator {
     fun oldestOutstanding(statuses: List<MonthStatus>): MonthStatus? =
         statuses.firstOrNull { it.status == MonthFeeStatus.UNPAID || it.status == MonthFeeStatus.PARTIAL }
 
+    fun distributePayment(
+        amount: Double,
+        statuses: List<MonthStatus>,
+        fallbackPeriod: String
+    ): List<Pair<String, Double>> {
+        var leftover = cents(amount)
+        if (leftover <= 0L) return emptyList()
+        val allocations = linkedMapOf<String, Long>()
+        for (s in statuses) {
+            if (leftover <= 0L) break
+            if (s.status != MonthFeeStatus.UNPAID && s.status != MonthFeeStatus.PARTIAL) continue
+            val due = (cents(s.expected) - cents(s.paid)).coerceAtLeast(0L)
+            if (due <= 0L) continue
+            val pay = minOf(due, leftover)
+            allocations[s.period] = (allocations[s.period] ?: 0L) + pay
+            leftover -= pay
+        }
+        if (leftover > 0L) {
+            allocations[fallbackPeriod] = (allocations[fallbackPeriod] ?: 0L) + leftover
+        }
+        return allocations.map { (period, c) -> period to c / 100.0 }
+    }
+
     private fun parseStart(joinIso: String): YearMonth? =
         try {
             YearMonth.from(LocalDate.parse(joinIso))

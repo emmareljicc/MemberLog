@@ -36,6 +36,16 @@ class FeeViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    fun recordPayments(memberId: Int, allocations: List<Pair<String, Double>>, paidDateIso: String) {
+        viewModelScope.launch {
+            allocations.forEach { (period, amount) ->
+                repo.recordPayment(
+                    FeePayment(memberId = memberId, periodMonth = period, amount = amount, paidDate = paidDateIso)
+                )
+            }
+        }
+    }
+
     fun setDefaultFee(amount: Double) {
         viewModelScope.launch { repo.setDefaultFee(amount) }
     }
