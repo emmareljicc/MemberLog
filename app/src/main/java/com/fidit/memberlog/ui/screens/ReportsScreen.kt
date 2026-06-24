@@ -2,6 +2,7 @@ package com.fidit.memberlog.ui.screens
 
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
@@ -53,14 +54,15 @@ fun ReportsScreen(
 
     val ym = YearMonth.now()
     val yr = LocalDate.now().year
-    val fromIso: String?
-    val toIso: String?
-    when (period) {
-        ExportPeriod.MONTH -> { fromIso = ym.atDay(1).toString(); toIso = ym.atEndOfMonth().toString() }
-        ExportPeriod.YEAR -> { fromIso = "$yr-01-01"; toIso = "$yr-12-31" }
-        ExportPeriod.ALL -> { fromIso = null; toIso = null }
-        ExportPeriod.CUSTOM -> { fromIso = customFrom.ifBlank { null }; toIso = customTo.ifBlank { null } }
+
+    // Inicijalizacija varijabli direktno kroz when izraz rješava grešku kompajlera
+    val (fromIso, toIso) = when (period) {
+        ExportPeriod.MONTH -> Pair(ym.atDay(1).toString(), ym.atEndOfMonth().toString())
+        ExportPeriod.YEAR -> Pair("$yr-01-01", "$yr-12-31")
+        ExportPeriod.ALL -> Pair(null, null)
+        ExportPeriod.CUSTOM -> Pair(customFrom.ifBlank { null }, customTo.ifBlank { null })
     }
+
     val data = remember(allData, fromIso, toIso) { allData?.let { ReportBuilder.filterByRange(it, fromIso, toIso) } }
 
     val periodLabel = when (period) {
@@ -74,6 +76,13 @@ fun ReportsScreen(
         ExportPeriod.YEAR -> "$yr"
         ExportPeriod.ALL -> "sve"
         ExportPeriod.CUSTOM -> "${fromIso ?: "x"}_${toIso ?: "x"}"
+    }
+
+    val totalDebt = remember(allData) {
+        allData?.memberRows?.sumOf { it.owed } ?: 0.0
+    }
+    val debtorCount = remember(allData) {
+        allData?.memberRows?.count { it.owed > 0.0 } ?: 0
     }
 
     Column(
@@ -94,7 +103,9 @@ fun ReportsScreen(
         Spacer(Modifier.height(Dimens.gapSmall))
         AppCard(modifier = Modifier.fillMaxWidth()) {
             Row(
-                modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(Dimens.gapSmall)
             ) {
                 ExportPeriod.entries.forEach { p ->
@@ -133,10 +144,27 @@ fun ReportsScreen(
             shareFile(context, file, "application/pdf")
         }
 
+        Spacer(Modifier.height(Dimens.sectionGap))
+        SectionLabel("STANJE DUGOVANJA")
+        Spacer(Modifier.height(Dimens.gapSmall))
+        AppCard(modifier = Modifier.fillMaxWidth(), contentPadding = 16.dp) {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text("Ukupno potraživanje", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Spacer(Modifier.height(4.dp))
+                Text(money(totalDebt), style = MaterialTheme.typography.headlineLarge, color = MaterialTheme.colorScheme.error)
+                Spacer(Modifier.height(8.dp))
+                Text("$debtorCount članova s nepodmirenim dugovanjima", style = MaterialTheme.typography.bodySmall)
+            }
+        }
+
         Spacer(Modifier.height(32.dp))
 
-        // Pozivamo komponentu gumba i prepuštamo njoj da iz allData izvuče ReportRow elemente
-        SendDebtorsEmailButton(reportData = allData)
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center
+        ) {
+            SendDebtorsEmailButton(reportData = allData)
+        }
 
         Spacer(Modifier.height(Dimens.gap))
     }
