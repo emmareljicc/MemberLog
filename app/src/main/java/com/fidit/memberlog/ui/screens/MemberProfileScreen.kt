@@ -7,14 +7,35 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PhotoCamera
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -22,9 +43,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fidit.memberlog.LoginActivity
 import com.fidit.memberlog.model.Member
 import com.fidit.memberlog.model.MembershipStatus
+import com.fidit.memberlog.ui.MembersViewModel
 import com.fidit.memberlog.ui.MemberSessionViewModel
 import com.fidit.memberlog.ui.components.AppCard
 import com.fidit.memberlog.ui.components.HeroCard
@@ -41,7 +64,9 @@ fun MemberProfileScreen(
     member: Member,
     isDarkMode: Boolean,
     onThemeChanged: (Boolean) -> Unit,
-    sessionViewModel: MemberSessionViewModel
+    sessionViewModel: MemberSessionViewModel,
+    onNavigateToExchangeRates: () -> Unit,
+    membersViewModel: MembersViewModel = viewModel()
 ) {
     val context = LocalContext.current
     var email by remember(member.id) { mutableStateOf(member.email) }
@@ -49,6 +74,9 @@ fun MemberProfileScreen(
     var address by remember(member.id) { mutableStateOf(member.address) }
     var photoPath by remember(member.id) { mutableStateOf(member.photoPath) }
     var newPassword by remember { mutableStateOf("") }
+
+    val owedByMember by membersViewModel.owedByMember.collectAsState()
+    val memberOwed = owedByMember?.get(member.id) ?: 0.0
 
     val pickPhoto = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) copyMemberPhoto(context, uri)?.let { photoPath = it }
@@ -125,6 +153,30 @@ fun MemberProfileScreen(
             }
         }
 
+        Spacer(Modifier.height(Dimens.gap))
+
+        SectionLabel("TEČAJNA LISTA")
+        Spacer(Modifier.height(Dimens.gapSmall))
+        AppCard(modifier = Modifier.fillMaxWidth(), onClick = onNavigateToExchangeRates) {
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("Tečajna lista", style = MaterialTheme.typography.titleMedium)
+                    Text("Pregled tečajeva valuta za klupska dugovanja", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                Text("›", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+
+        if (memberOwed > 0.0) {
+            Spacer(Modifier.height(Dimens.gapSmall))
+            Text(
+                text = "Trenutni dug: ${String.format("%.2f", memberOwed)} EUR",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(start = 4.dp)
+            )
+        }
+
         Spacer(Modifier.height(Dimens.sectionGap))
 
         Button(
@@ -133,7 +185,9 @@ fun MemberProfileScreen(
                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 context.startActivity(intent)
             },
-            modifier = Modifier.fillMaxWidth().height(54.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(54.dp),
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
             shape = MaterialTheme.shapes.small
         ) { Text("ODJAVI SE", color = Color.White) }

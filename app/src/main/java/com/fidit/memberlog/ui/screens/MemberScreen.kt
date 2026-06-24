@@ -36,6 +36,7 @@ fun MemberScreen(
     isDarkMode: Boolean,
     onThemeChanged: (Boolean) -> Unit,
     onExit: (() -> Unit)? = null,
+    onNavigateToExchangeRates: () -> Unit,
     sessionViewModel: MemberSessionViewModel = viewModel(),
     feeViewModel: FeeViewModel = viewModel(),
     activitiesViewModel: ActivitiesViewModel = viewModel()
@@ -84,7 +85,13 @@ fun MemberScreen(
                 when (selectedTab) {
                     0 -> MemberHomeScreen(m, feeViewModel, activitiesViewModel)
                     1 -> MemberEventsScreen(m, activitiesViewModel)
-                    else -> MemberProfileScreen(m, isDarkMode, onThemeChanged, sessionViewModel)
+                    else -> MemberProfileScreen(
+                        member = m,
+                        isDarkMode = isDarkMode,
+                        onThemeChanged = onThemeChanged,
+                        sessionViewModel = sessionViewModel,
+                        onNavigateToExchangeRates = onNavigateToExchangeRates
+                    )
                 }
             }
         }

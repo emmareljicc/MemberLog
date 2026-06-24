@@ -7,12 +7,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -38,7 +33,6 @@ fun SettingsScreen(
     onOpenMyProfile: () -> Unit,
     onManageRoles: () -> Unit,
     onOpenReports: () -> Unit,
-    onNavigateToExchangeRates: () -> Unit,
     feeViewModel: FeeViewModel = viewModel()
 ) {
     val context = LocalContext.current
@@ -73,20 +67,6 @@ fun SettingsScreen(
                     Text("Uključi ili isključi tamni izgled", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 Switch(checked = isDarkMode, onCheckedChange = { onThemeChanged(it) })
-            }
-        }
-
-        Spacer(Modifier.height(Dimens.gap))
-
-        SectionLabel("VALUTA I TEČAJ")
-        Spacer(Modifier.height(Dimens.gapSmall))
-        AppCard(modifier = Modifier.fillMaxWidth(), onClick = onNavigateToExchangeRates) {
-            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text("Tečajna lista", style = MaterialTheme.typography.titleMedium)
-                    Text("Pregled tečajeva valuta za klupska dugovanja", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-                Text("›", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
 

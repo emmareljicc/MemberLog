@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fidit.memberlog.ui.ActivitiesViewModel
+import com.fidit.memberlog.ui.DashboardViewModel
 import com.fidit.memberlog.ui.MembersViewModel
 import com.fidit.memberlog.ui.RolesViewModel
 import com.fidit.memberlog.ui.components.AddActionSheet
@@ -27,6 +28,8 @@ fun MainScreen(
     isAdmin: Boolean,
     memberId: Int,
     onOpenMyProfile: () -> Unit,
+    onNavigateToExchangeRates: () -> Unit,
+    dashboardViewModel: DashboardViewModel = viewModel(),
     viewModel: MembersViewModel = viewModel(),
     activitiesViewModel: ActivitiesViewModel = viewModel(),
     rolesViewModel: RolesViewModel = viewModel()
@@ -42,14 +45,12 @@ fun MainScreen(
 
     var showRoles by remember { mutableStateOf(false) }
     var showReports by remember { mutableStateOf(false) }
-    var showExchangeRates by remember { mutableStateOf(false) }
 
     fun resetSubScreens() {
         selectedMemberId = null
         selectedEventId = null
         showRoles = false
         showReports = false
-        showExchangeRates = false
     }
 
     val members by viewModel.members.collectAsState()
@@ -121,7 +122,6 @@ fun MainScreen(
                 )
                 showRoles -> RolesScreen(isAdmin = isAdmin, onBack = { showRoles = false })
                 showReports -> ReportsScreen(onBack = { showReports = false })
-                showExchangeRates -> ExchangeRateScreen(onBack = { showExchangeRates = false })
                 selectedTab == 0 -> DashboardScreen(
                     rolesById = rolesById,
                     onMemberClick = { id ->
@@ -169,13 +169,12 @@ fun MainScreen(
                 else -> SettingsScreen(
                     isDarkMode = isDarkMode,
                     onThemeChanged = onThemeChanged,
-                    isAdmin = isAdmin,
+                    isAdmin = true,
                     userName = currentUserName,
                     userRole = currentUserRole,
                     onOpenMyProfile = onOpenMyProfile,
                     onManageRoles = { showRoles = true },
-                    onOpenReports = { showReports = true },
-                    onNavigateToExchangeRates = { showExchangeRates = true }
+                    onOpenReports = { showReports = true }
                 )
             }
         }
@@ -199,6 +198,5 @@ fun MainScreen(
                 }
             )
         }
-
     }
 }
