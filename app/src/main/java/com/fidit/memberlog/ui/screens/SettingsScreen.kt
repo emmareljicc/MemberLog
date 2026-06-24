@@ -49,6 +49,7 @@ fun SettingsScreen(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(Dimens.screenPadding)
+            .padding(bottom = NavBarSpace)
     ) {
         ScreenHeader(title = "Postavke", subtitle = "Prilagodi izgled i funkcionalnosti")
         Spacer(Modifier.height(Dimens.sectionGap))

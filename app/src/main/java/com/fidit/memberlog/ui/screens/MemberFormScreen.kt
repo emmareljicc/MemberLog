@@ -137,7 +137,7 @@ fun MemberFormScreen(
         }
     }
 
-    Column(modifier = Modifier.fillMaxSize().padding(Dimens.screenPadding)) {
+    Column(modifier = Modifier.fillMaxSize().padding(Dimens.screenPadding).padding(bottom = NavBarSpace)) {
         ScreenHeader(title = title, subtitle = if (isRegister) "Stvori svoj članski račun" else null, onBack = onBack)
         Spacer(Modifier.height(Dimens.gap))
 

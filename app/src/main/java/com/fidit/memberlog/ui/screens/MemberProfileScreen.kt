@@ -80,6 +80,7 @@ fun MemberProfileScreen(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(Dimens.screenPadding)
+            .padding(bottom = NavBarSpace)
     ) {
         ScreenHeader(title = "Moj profil")
         Spacer(Modifier.height(Dimens.gap))

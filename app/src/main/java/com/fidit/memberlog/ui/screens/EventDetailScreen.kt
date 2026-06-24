@@ -91,6 +91,7 @@ fun EventDetailScreen(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(Dimens.screenPadding)
+            .padding(bottom = NavBarSpace)
     ) {
         ScreenHeader(title = "Detalji događanja", onBack = onBack)
         Spacer(Modifier.height(Dimens.gap))

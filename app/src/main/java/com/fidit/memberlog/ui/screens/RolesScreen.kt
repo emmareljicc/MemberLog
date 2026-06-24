@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.selectable
@@ -121,7 +122,7 @@ fun RolesScreen(
             Spacer(Modifier.height(16.dp))
         }
 
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        LazyColumn(contentPadding = PaddingValues(bottom = NavBarSpace), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             items(roles) { role ->
                 AppCard(
                     modifier = Modifier.fillMaxWidth(),

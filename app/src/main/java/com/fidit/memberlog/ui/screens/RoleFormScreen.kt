@@ -33,7 +33,7 @@ fun RoleFormScreen(
     var grantsAdmin by remember { mutableStateOf(existing?.grantsAdmin ?: false) }
     val valid = name.isNotBlank()
 
-    Column(modifier = Modifier.fillMaxSize().padding(Dimens.screenPadding)) {
+    Column(modifier = Modifier.fillMaxSize().padding(Dimens.screenPadding).padding(bottom = NavBarSpace)) {
         ScreenHeader(title = title, onBack = onBack)
         Spacer(Modifier.height(Dimens.gap))
         Column(

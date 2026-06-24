@@ -65,7 +65,7 @@ fun ActivitiesScreen(
         if (eventList == null) {
             LoadingSpinner(Modifier.fillMaxSize())
         } else {
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(Dimens.gap)) {
+            LazyColumn(contentPadding = PaddingValues(bottom = NavBarSpace), verticalArrangement = Arrangement.spacedBy(Dimens.gap)) {
                 items(eventList) { event ->
                     val upcoming = event.date >= today
                     AppCard(modifier = Modifier.fillMaxWidth(), onClick = { onEventClick(event.id) }, contentPadding = 16.dp) {

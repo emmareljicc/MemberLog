@@ -30,18 +30,24 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
+import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.sin
+import kotlin.math.sqrt
 
 private val BarHeight = 64.dp
-private val Overhang = 4.dp
+private val Overhang = 18.dp
 private val ButtonSize = 56.dp
-private val CornerRadius = 28.dp
-private val NotchRadius = 34.dp
+private val BarCornerRadius = 28.dp
+private val NotchGap = 8.dp
+private val NotchFillet = 18.dp
+
+val NavBarSpace = 88.dp
 
 data class BottomDest(val icon: ImageVector, val contentDescription: String, val badgeCount: Int = 0)
 
@@ -50,36 +56,51 @@ fun MemberLogBottomBar(
     destinations: List<BottomDest>,
     selectedIndex: Int,
     onSelect: (Int) -> Unit,
+    modifier: Modifier = Modifier,
     onAddClick: (() -> Unit)? = null,
     addExpanded: Boolean = false
 ) {
     if (onAddClick == null) {
-        PlainBottomBar(destinations, selectedIndex, onSelect)
+        PlainBottomBar(destinations, selectedIndex, onSelect, modifier)
         return
     }
     val density = LocalDensity.current
-    val notchPx = with(density) { NotchRadius.toPx() }
-    val cornerPx = with(density) { CornerRadius.toPx() }
+    val cornerPx = with(density) { BarCornerRadius.toPx() }
+    val crPx = with(density) { (ButtonSize / 2f + NotchGap).toPx() }
+    val frPx = with(density) { NotchFillet.toPx() }
+    val fyPx = with(density) { (ButtonSize / 2f - Overhang).toPx() }
 
-    val pillShape = remember(notchPx, cornerPx) {
+    val pillShape = remember(cornerPx, crPx, frPx, fyPx) {
         GenericShape { size, _ ->
+            val path = this
             val w = size.width
             val h = size.height
             val cx = w / 2f
+            val xf = sqrt((crPx + frPx) * (crPx + frPx) - (frPx - fyPx) * (frPx - fyPx))
+            val filletEndL = Math.toDegrees(atan2((fyPx - frPx).toDouble(), xf.toDouble()))
+            val cradleStartL = Math.toDegrees(atan2((frPx - fyPx).toDouble(), (-xf).toDouble()))
+            val cradleEndR = Math.toDegrees(atan2((frPx - fyPx).toDouble(), xf.toDouble()))
+            var cradleSweep = cradleEndR - cradleStartL
+            if (cradleSweep > 0.0) cradleSweep -= 360.0
+            val filletStartR = Math.toDegrees(atan2((fyPx - frPx).toDouble(), (-xf).toDouble()))
+
+            fun arc(cx0: Float, cy0: Float, r: Float, startDeg: Double, sweepDeg: Double) {
+                val n = 40
+                for (i in 0..n) {
+                    val a = Math.toRadians(startDeg + sweepDeg * i / n)
+                    path.lineTo(cx0 + r * cos(a).toFloat(), cy0 + r * sin(a).toFloat())
+                }
+            }
+
             moveTo(cornerPx, 0f)
-            lineTo(cx - notchPx, 0f)
-            arcTo(
-                rect = Rect(cx - notchPx, -notchPx, cx + notchPx, notchPx),
-                startAngleDegrees = 180f,
-                sweepAngleDegrees = -180f,
-                forceMoveTo = false
-            )
+            lineTo(cx - xf, 0f)
+            arc(cx - xf, frPx, frPx, -90.0, filletEndL + 90.0)
+            arc(cx, fyPx, crPx, cradleStartL, cradleSweep)
+            arc(cx + xf, frPx, frPx, filletStartR, -90.0 - filletStartR)
             lineTo(w - cornerPx, 0f)
             quadraticTo(w, 0f, w, cornerPx)
-            lineTo(w, h - cornerPx)
-            quadraticTo(w, h, w - cornerPx, h)
-            lineTo(cornerPx, h)
-            quadraticTo(0f, h, 0f, h - cornerPx)
+            lineTo(w, h)
+            lineTo(0f, h)
             lineTo(0f, cornerPx)
             quadraticTo(0f, 0f, cornerPx, 0f)
             close()
@@ -89,12 +110,18 @@ fun MemberLogBottomBar(
     val leftCount = (destinations.size + 1) / 2
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .navigationBarsPadding()
-            .padding(horizontal = 20.dp, vertical = 8.dp)
             .height(BarHeight + Overhang)
     ) {
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .height(BarHeight)
+                .background(MaterialTheme.colorScheme.background)
+        )
         Box(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -136,7 +163,7 @@ fun MemberLogBottomBar(
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .size(ButtonSize)
-                .shadow(elevation = 10.dp, shape = CircleShape)
+                .shadow(elevation = 12.dp, shape = CircleShape)
                 .clip(CircleShape)
                 .background(MaterialTheme.colorScheme.primary)
                 .clickable(onClick = onAddClick),
@@ -159,21 +186,21 @@ fun MemberLogBottomBar(
 private fun PlainBottomBar(
     destinations: List<BottomDest>,
     selectedIndex: Int,
-    onSelect: (Int) -> Unit
+    onSelect: (Int) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .navigationBarsPadding()
-            .padding(horizontal = 20.dp, vertical = 8.dp)
             .height(BarHeight)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(BarHeight)
-                .shadow(elevation = 12.dp, shape = androidx.compose.foundation.shape.RoundedCornerShape(CornerRadius), clip = false)
-                .background(color = MaterialTheme.colorScheme.surface, shape = androidx.compose.foundation.shape.RoundedCornerShape(CornerRadius))
+                .shadow(elevation = 12.dp, shape = androidx.compose.foundation.shape.RoundedCornerShape(topStart = BarCornerRadius, topEnd = BarCornerRadius), clip = false)
+                .background(color = MaterialTheme.colorScheme.surface, shape = androidx.compose.foundation.shape.RoundedCornerShape(topStart = BarCornerRadius, topEnd = BarCornerRadius))
         ) {
             Row(
                 modifier = Modifier

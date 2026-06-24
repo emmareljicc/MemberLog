@@ -111,7 +111,7 @@ object PdfReport {
                 "Članova" to data.totals.members.toString(),
                 "Plaćeno (mjesec)" to "${data.totals.paidThisMonth} / ${data.totals.members}",
                 "Prikupljeno" to "${money(data.totals.collected)} €",
-                "Dugovanje" to "${money(data.totals.outstanding)} €"
+                "Dugovanja" to "${money(data.totals.outstanding)} €"
             )
             val colW = (RIGHT - LEFT) / 4
             stats.forEachIndexed { i, (label, value) ->

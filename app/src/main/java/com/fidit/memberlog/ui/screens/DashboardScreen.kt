@@ -47,6 +47,7 @@ fun DashboardScreen(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(Dimens.screenPadding)
+            .padding(bottom = NavBarSpace)
     ) {
         ScreenHeader(title = "Nadzorna ploča", subtitle = "Pregled stanja kluba")
         Spacer(Modifier.height(Dimens.gap))

@@ -1,5 +1,6 @@
 package com.fidit.memberlog.ui.screens
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -13,7 +14,6 @@ import androidx.compose.material.icons.outlined.Event
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -58,8 +58,10 @@ fun MemberScreen(
         BottomDest(Icons.Outlined.Person, "Profil")
     )
 
-    Scaffold(
-        topBar = {
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
             if (onExit != null) {
                 Row(
                     modifier = Modifier
@@ -72,20 +74,6 @@ fun MemberScreen(
                     Text("Moj profil", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
                 }
             }
-        },
-        bottomBar = {
-            MemberLogBottomBar(
-                destinations = destinations,
-                selectedIndex = selectedTab,
-                onSelect = { selectedTab = it }
-            )
-        }
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) {
             val m = member
             if (m == null) {
                 LoadingSpinner(Modifier.fillMaxSize())
@@ -131,5 +119,12 @@ fun MemberScreen(
                 }
             }
         }
+
+        MemberLogBottomBar(
+            destinations = destinations,
+            selectedIndex = selectedTab,
+            modifier = Modifier.align(Alignment.BottomCenter),
+            onSelect = { selectedTab = it }
+        )
     }
 }

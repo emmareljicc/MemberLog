@@ -25,7 +25,7 @@ fun EventFormScreen(
     var notes by remember { mutableStateOf(existing?.notes ?: "") }
     val valid = name.isNotBlank() && date.isNotBlank()
 
-    Column(modifier = Modifier.fillMaxSize().padding(Dimens.screenPadding)) {
+    Column(modifier = Modifier.fillMaxSize().padding(Dimens.screenPadding).padding(bottom = NavBarSpace)) {
         ScreenHeader(title = title, onBack = onBack)
         Spacer(Modifier.height(Dimens.gap))
         Column(

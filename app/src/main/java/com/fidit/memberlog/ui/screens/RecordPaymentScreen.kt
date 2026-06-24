@@ -56,6 +56,7 @@ fun RecordPaymentScreen(
         modifier = Modifier
             .fillMaxSize()
             .padding(Dimens.screenPadding)
+            .padding(bottom = NavBarSpace)
     ) {
         ScreenHeader(
             title = "Zabilježi uplatu",

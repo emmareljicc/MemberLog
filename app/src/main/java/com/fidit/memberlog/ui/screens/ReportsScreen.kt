@@ -107,6 +107,7 @@ fun ReportsScreen(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(Dimens.screenPadding)
+            .padding(bottom = NavBarSpace)
     ) {
         ScreenHeader(title = "Izvještaji", subtitle = "Izvezi podatke i sažetak kluba", onBack = onBack)
         Spacer(Modifier.height(Dimens.sectionGap))

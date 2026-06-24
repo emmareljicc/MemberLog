@@ -71,6 +71,7 @@ fun MemberHomeScreen(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(Dimens.screenPadding)
+            .padding(bottom = NavBarSpace)
     ) {
         Text("Pozdrav,", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Text(member.name, style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary)

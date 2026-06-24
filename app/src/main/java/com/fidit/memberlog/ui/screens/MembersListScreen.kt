@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -118,7 +119,7 @@ fun MembersListScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            else -> LazyColumn(verticalArrangement = Arrangement.spacedBy(Dimens.gap)) {
+            else -> LazyColumn(contentPadding = PaddingValues(bottom = NavBarSpace), verticalArrangement = Arrangement.spacedBy(Dimens.gap)) {
                 items(filtered) { member ->
                     val role = rolesById[member.roleId]
                     val avatarColor = role?.let { roleColor(it.colorHex) } ?: MaterialTheme.colorScheme.primary

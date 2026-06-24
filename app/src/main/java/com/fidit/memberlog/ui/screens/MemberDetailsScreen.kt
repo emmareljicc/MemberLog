@@ -130,6 +130,7 @@ fun MemberDetailsScreen(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(Dimens.screenPadding)
+            .padding(bottom = NavBarSpace)
     ) {
         ScreenHeader(title = "Profil člana", onBack = onBack)
         Spacer(Modifier.height(Dimens.gap))
