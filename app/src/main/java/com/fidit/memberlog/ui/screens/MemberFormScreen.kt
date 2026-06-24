@@ -2,6 +2,8 @@ package com.fidit.memberlog.ui.screens
 
 import android.content.Context
 import android.net.Uri
+import android.util.Patterns
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -90,12 +92,46 @@ fun MemberFormScreen(
 
     fun submit() {
         if (!valid) return
+
+        if (name.trim().length < 2) {
+            Toast.makeText(context, "Ime mora sadržavati najmanje 2 znaka", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        if (!Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches()) {
+            Toast.makeText(context, "Unesite valjanu e-mail adresu", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        if (phone.trim().isNotEmpty() && !Patterns.PHONE.matcher(phone.trim()).matches()) {
+            Toast.makeText(context, "Unesite valjan broj telefona", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val clubFee = feeOverride.replace(',', '.').toDoubleOrNull()
+        if (clubFee != null && clubFee < 0.0) {
+            Toast.makeText(context, "Iznos članarine ne može biti negativan", Toast.LENGTH_SHORT).show()
+            return
+        }
+
         if (isRegister) {
+            if (password.length < 4) {
+                Toast.makeText(context, "Lozinka mora imati najmanje 4 znaka", Toast.LENGTH_SHORT).show()
+                return
+            }
+            if (!passwordsMatch) {
+                Toast.makeText(context, "Lozinke se ne podudaraju", Toast.LENGTH_SHORT).show()
+                return
+            }
             onSubmit(name.trim(), registerRoleId!!, email.trim(), phone.trim(), null, "ACTIVE", "", "", null, password)
         } else {
+            if (password.isNotEmpty() && password.length < 4) {
+                Toast.makeText(context, "Lozinka mora imati najmanje 4 znaka", Toast.LENGTH_SHORT).show()
+                return
+            }
             onSubmit(
                 name.trim(), roleId!!, email.trim(), phone.trim(),
-                feeOverride.replace(',', '.').toDoubleOrNull(), status.name, address, notes, photoPath,
+                clubFee, status.name, address, notes, photoPath,
                 password.ifBlank { null }
             )
         }
